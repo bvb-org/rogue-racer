@@ -433,10 +433,31 @@ class Track {
     renderDecorations() {
         // Render decorations
         for (const decoration of this.decorations) {
+            let spriteKey = decoration.type;
+            
+            // If it's a building, randomly select one of the building images
+            if (decoration.type === 'building') {
+                // Try to get all available building textures
+                const buildingTextures = [];
+                let index = 0;
+                
+                // Check for building textures (we know we have at least building0 through building3)
+                while (this.scene.textures.exists(`building${index}`)) {
+                    buildingTextures.push(`building${index}`);
+                    index++;
+                }
+                
+                // If we found any building textures, randomly select one
+                if (buildingTextures.length > 0) {
+                    const randomIndex = Math.floor(Math.random() * buildingTextures.length);
+                    spriteKey = buildingTextures[randomIndex];
+                }
+            }
+            
             const sprite = this.scene.add.image(
                 decoration.x * this.tileSize + this.tileSize / 2,
                 decoration.y * this.tileSize + this.tileSize / 2,
-                decoration.type
+                spriteKey
             );
             
             this.decorationSprites.add(sprite);

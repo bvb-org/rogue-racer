@@ -61,7 +61,15 @@ class BootScene extends Phaser.Scene {
         this.load.image('bullet', 'assets/images/bullet.png');
         this.load.image('road', 'assets/images/road.png');
         this.load.image('grass', 'assets/images/grass.png');
-        this.load.image('building', 'assets/images/building.png');
+        // Load all building images from the buildings folder
+        // Note: To add more buildings in the future, place them in the assets/images/buildings folder
+        // and add them here following the naming convention 'buildingX' where X is the next number
+        this.load.image('building0', 'assets/images/buildings/building.png');
+        this.load.image('building1', 'assets/images/buildings/building1.png');
+        this.load.image('building2', 'assets/images/buildings/building2.png');
+        this.load.image('building3', 'assets/images/buildings/building3.png');
+        // To add more buildings, follow this pattern:
+        // this.load.image('building4', 'assets/images/buildings/your-new-building.png');
         this.load.image('mountain', 'assets/images/mountain.png');
         this.load.image('tree', 'assets/images/tree.png');
         this.load.image('billboard', 'assets/images/billboard.png');
@@ -111,7 +119,14 @@ class BootScene extends Phaser.Scene {
         createPlaceholder('bullet', 5, 10, 0xf1c40f);
         createPlaceholder('road', 32, 32, 0x34495e);
         createPlaceholder('grass', 32, 32, 0x2ecc71);
-        createPlaceholder('building', 80, 120, 0x7f8c8d);
+        // Create placeholders for all building types
+        // Note: When adding new building images, also add corresponding placeholders here
+        createPlaceholder('building0', 80, 120, 0x7f8c8d);
+        createPlaceholder('building1', 80, 120, 0x7f8c8d);
+        createPlaceholder('building2', 80, 120, 0x7f8c8d);
+        createPlaceholder('building3', 80, 120, 0x7f8c8d);
+        // To add more building placeholders, follow this pattern:
+        // createPlaceholder('building4', 80, 120, 0x7f8c8d);
         createPlaceholder('mountain', 150, 100, 0x795548);
         createPlaceholder('tree', 40, 60, 0x27ae60);
         createPlaceholder('billboard', 100, 50, 0xecf0f1);
