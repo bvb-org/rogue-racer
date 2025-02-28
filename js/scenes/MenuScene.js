@@ -18,12 +18,19 @@ class MenuScene extends Phaser.Scene {
             font: 'bold 48px Arial',
             fill: '#ffffff'
         }).setOrigin(0.5);
-        
         this.add.text(width / 2, height / 4 + 60, 'Romanian Racing Adventure', {
             font: '24px Arial',
             fill: '#ffffff'
         }).setOrigin(0.5);
         
+        // Game description
+        this.add.text(width / 2, height / 4 + 110, 'Race through Romanian cities, avoid obstacles,\ndefeat enemies, and complete missions in this\naction-packed driving adventure!', {
+            font: '16px Arial',
+            fill: '#ffffff',
+            align: 'center'
+        }).setOrigin(0.5);
+        
+        // City selection
         // City selection
         this.createCitySelection(width, height);
         

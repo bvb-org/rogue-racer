@@ -1,14 +1,19 @@
 /**
  * Track Generator
  * Handles procedural generation of tracks for each city
+ * Enhanced with intersections, dead-ends, and more complex road networks
  */
 class Track {
     constructor(scene, city) {
         this.scene = scene;
         this.city = city;
         this.tileSize = 32;
-        this.roadWidth = 3; // Number of tiles
-        this.trackLength = 150; // Length of track in tiles (increased by 1.5x)
+        this.roadWidth = 2; // Number of tiles
+        this.trackLength = 150; // Length of track in tiles
+        this.minStartFinishDistance = 75; // Minimum distance between start and finish (in tiles)
+        this.intersectionChance = 0.3; // Chance to create an intersection
+        this.deadEndChance = 0.4; // Chance for a branch to be a dead end
+        this.maxBranches = 3; // Maximum number of branches from the main path
         
         // Track properties based on city
         this.cityProperties = {
@@ -16,6 +21,7 @@ class Track {
                 curviness: 0.3, // Lower means straighter roads
                 obstacles: 0.4, // Density of obstacles
                 buildings: 0.7, // Density of buildings
+                intersections: 0.25, // Density of intersections
                 landmarks: ['parliament'],
                 billboards: [
                     'Bine ați venit în București!',
@@ -28,6 +34,7 @@ class Track {
                 curviness: 0.7, // Higher means more curves (mountain roads)
                 obstacles: 0.5,
                 buildings: 0.4,
+                intersections: 0.3, // More intersections in mountain roads
                 landmarks: ['black-church'],
                 billboards: [
                     'Bine ați venit în Brașov!',
@@ -40,6 +47,7 @@ class Track {
                 curviness: 0.5, // Medium curviness
                 obstacles: 0.3,
                 buildings: 0.6,
+                intersections: 0.35, // More complex road network
                 landmarks: [],
                 billboards: [
                     'Bine ați venit în Cluj-Napoca!',
@@ -52,6 +60,7 @@ class Track {
                 curviness: 0.4, // Slightly curvier than Bucharest
                 obstacles: 0.45, // More obstacles than Cluj-Napoca
                 buildings: 0.6, // Same as Cluj-Napoca
+                intersections: 0.3, // Medium intersection density
                 landmarks: [],
                 billboards: [
                     'Bine ați venit în Timișoara!',
@@ -64,6 +73,7 @@ class Track {
                 curviness: 0.6, // More curves than Cluj-Napoca
                 obstacles: 0.5, // Same as Brașov
                 buildings: 0.5, // Medium building density
+                intersections: 0.4, // Higher intersection density
                 landmarks: [],
                 billboards: [
                     'Bine ați venit în Iași!',
@@ -76,6 +86,7 @@ class Track {
                 curviness: 0.8, // Most curves (challenging roads)
                 obstacles: 0.6, // Highest obstacle density
                 buildings: 0.3, // Lower building density
+                intersections: 0.45, // Most complex road network
                 landmarks: [],
                 billboards: [
                     'Bine ați venit în Vaslui!',
@@ -88,12 +99,17 @@ class Track {
         
         // Track data
         this.trackData = [];
-        this.roadPath = [];
+        this.roadPath = []; // Main path from start to finish
+        this.allRoadTiles = new Set(); // All road tiles including branches
+        this.branchPaths = []; // Additional branch paths
+        this.deadEnds = []; // Dead-end paths
         this.obstacles = [];
         this.decorations = [];
         this.billboards = [];
         this.landmarks = [];
         this.finishLine = null;
+        this.startPoint = { x: 0, y: 0 };
+        this.finishPoint = null;
         
         // Generate the track
         this.generateTrack();
@@ -103,8 +119,11 @@ class Track {
         // Get properties for current city
         const props = this.cityProperties[this.city];
         
-        // Generate road path
-        this.generateRoadPath(props.curviness);
+        // Generate main road path
+        this.generateMainRoadPath(props.curviness);
+        
+        // Generate intersections and branches
+        this.generateIntersections(props.intersections);
         
         // Generate obstacles
         this.generateObstacles(props.obstacles);
@@ -122,7 +141,7 @@ class Track {
         this.addFinishLine();
     }
     
-    generateRoadPath(curviness) {
+    generateMainRoadPath(curviness) {
         // Start with a straight section
         let x = 0;
         let y = 0;
@@ -130,8 +149,9 @@ class Track {
         
         // Add starting point
         this.roadPath.push({ x, y });
+        this.allRoadTiles.add(`${x},${y}`);
         
-        // Generate path with Perlin noise for natural curves
+        // Generate path with natural curves
         for (let i = 1; i < this.trackLength; i++) {
             // Determine if we should change direction
             if (Math.random() < curviness) {
@@ -148,40 +168,333 @@ class Track {
                 case 3: x--; break; // Left
             }
             
+            // Check if this position is already in the path (avoid loops)
+            const posKey = `${x},${y}`;
+            if (this.allRoadTiles.has(posKey)) {
+                // Try a different direction
+                const newDirection = (direction + 1 + Math.floor(Math.random() * 3)) % 4;
+                direction = newDirection;
+                
+                // Reset position and try again
+                x = this.roadPath[i-1].x;
+                y = this.roadPath[i-1].y;
+                
+                // Move in new direction
+                switch (direction) {
+                    case 0: y--; break; // Up
+                    case 1: x++; break; // Right
+                    case 2: y++; break; // Down
+                    case 3: x--; break; // Left
+                }
+            }
+            
             // Add point to path
             this.roadPath.push({ x, y });
+            this.allRoadTiles.add(`${x},${y}`);
         }
         
-        // Normalize path to start at (0,0)
-        const minX = Math.min(...this.roadPath.map(p => p.x));
-        const minY = Math.min(...this.roadPath.map(p => p.y));
+        // Ensure minimum distance between start and finish
+        this.ensureMinStartFinishDistance();
         
+        // Normalize path to start at (0,0)
+        this.normalizeCoordinates();
+    }
+    
+    ensureMinStartFinishDistance() {
+        // Calculate direct distance between start and finish
+        const start = this.roadPath[0];
+        const finish = this.roadPath[this.roadPath.length - 1];
+        const distance = Math.sqrt(
+            Math.pow(finish.x - start.x, 2) +
+            Math.pow(finish.y - start.y, 2)
+        );
+        
+        // If distance is too small, extend the path
+        if (distance < this.minStartFinishDistance) {
+            // Get properties for current city to maintain curviness
+            const props = this.cityProperties[this.city];
+            const curviness = props.curviness;
+            
+            // Start with the last direction
+            let direction = this.getLastDirection();
+            let x = finish.x;
+            let y = finish.y;
+            
+            // Extend with natural curves until we reach minimum distance
+            while (Math.sqrt(
+                Math.pow(x - start.x, 2) +
+                Math.pow(y - start.y, 2)
+            ) < this.minStartFinishDistance) {
+                // Determine if we should change direction (using city's curviness)
+                if (Math.random() < curviness) {
+                    // Change direction slightly (-1, 0, or 1)
+                    const turn = Math.floor(Math.random() * 3) - 1;
+                    direction = (direction + turn + 4) % 4;
+                }
+                
+                // Move in current direction
+                switch (direction) {
+                    case 0: y--; break; // Up
+                    case 1: x++; break; // Right
+                    case 2: y++; break; // Down
+                    case 3: x--; break; // Left
+                }
+                
+                // Check if this position is already in the path (avoid loops)
+                const posKey = `${x},${y}`;
+                if (this.allRoadTiles.has(posKey)) {
+                    // Try a different direction
+                    direction = (direction + 1) % 4;
+                    
+                    // Reset position and try again
+                    x = this.roadPath[this.roadPath.length - 1].x;
+                    y = this.roadPath[this.roadPath.length - 1].y;
+                    
+                    // Move in new direction
+                    switch (direction) {
+                        case 0: y--; break; // Up
+                        case 1: x++; break; // Right
+                        case 2: y++; break; // Down
+                        case 3: x--; break; // Left
+                    }
+                }
+                
+                // Add point to path
+                this.roadPath.push({ x, y });
+                this.allRoadTiles.add(`${x},${y}`);
+            }
+        }
+    }
+    
+    getLastDirection() {
+        // Determine the direction of the last segment
+        const last = this.roadPath[this.roadPath.length - 1];
+        const secondLast = this.roadPath[this.roadPath.length - 2];
+        
+        const dx = last.x - secondLast.x;
+        const dy = last.y - secondLast.y;
+        
+        if (Math.abs(dx) > Math.abs(dy)) {
+            return dx > 0 ? 1 : 3; // Right or Left
+        } else {
+            return dy > 0 ? 2 : 0; // Down or Up
+        }
+    }
+    
+    normalizeCoordinates() {
+        // Get all coordinates including branches
+        const allCoords = Array.from(this.allRoadTiles).map(pos => {
+            const [x, y] = pos.split(',').map(Number);
+            return { x, y };
+        });
+        
+        // Find minimum x and y
+        const minX = Math.min(...allCoords.map(p => p.x));
+        const minY = Math.min(...allCoords.map(p => p.y));
+        
+        // Normalize main path
         this.roadPath = this.roadPath.map(p => ({
             x: p.x - minX,
             y: p.y - minY
         }));
+        
+        // Normalize branch paths
+        this.branchPaths = this.branchPaths.map(branch =>
+            branch.map(p => ({
+                x: p.x - minX,
+                y: p.y - minY
+            }))
+        );
+        
+        // Normalize dead ends
+        this.deadEnds = this.deadEnds.map(branch =>
+            branch.map(p => ({
+                x: p.x - minX,
+                y: p.y - minY
+            }))
+        );
+        
+        // Update all road tiles set
+        this.allRoadTiles.clear();
+        this.roadPath.forEach(p => this.allRoadTiles.add(`${p.x},${p.y}`));
+        this.branchPaths.forEach(branch =>
+            branch.forEach(p => this.allRoadTiles.add(`${p.x},${p.y}`))
+        );
+        this.deadEnds.forEach(branch =>
+            branch.forEach(p => this.allRoadTiles.add(`${p.x},${p.y}`))
+        );
+        
+        // Set start and finish points
+        this.startPoint = this.roadPath[0];
+        this.finishPoint = this.roadPath[this.roadPath.length - 1];
+    }
+    
+    generateIntersections(intersectionDensity) {
+        // Create intersections along the main path
+        const branchPoints = [];
+        
+        // Skip the first and last 20% of the main path for branches
+        const startSkip = Math.floor(this.roadPath.length * 0.2);
+        const endSkip = Math.floor(this.roadPath.length * 0.8);
+        
+        // Find potential branch points
+        for (let i = startSkip; i < endSkip; i += 10) {
+            if (Math.random() < intersectionDensity) {
+                branchPoints.push(i);
+            }
+        }
+        
+        // Limit the number of branches
+        const numBranches = Math.min(branchPoints.length, this.maxBranches);
+        
+        // Create branches
+        for (let i = 0; i < numBranches; i++) {
+            const branchIndex = branchPoints[i];
+            const branchPoint = this.roadPath[branchIndex];
+            
+            // Determine if this should be a dead end
+            const isDeadEnd = Math.random() < this.deadEndChance;
+            
+            // Create branch
+            const branchLength = Math.floor(Math.random() * 30) + 20; // 20-50 tiles
+            const branch = this.createBranch(branchPoint, branchLength, isDeadEnd);
+            
+            // Add branch to appropriate collection
+            if (isDeadEnd) {
+                this.deadEnds.push(branch);
+            } else {
+                this.branchPaths.push(branch);
+            }
+        }
+    }
+    
+    createBranch(startPoint, length, isDeadEnd) {
+        const branch = [];
+        let x = startPoint.x;
+        let y = startPoint.y;
+        
+        // Determine initial direction (different from main path)
+        const mainPathDirection = this.getDirectionAt(this.roadPath.findIndex(p =>
+            p.x === startPoint.x && p.y === startPoint.y
+        ));
+        
+        // Choose a direction that's perpendicular to the main path
+        let direction;
+        if (mainPathDirection === 0 || mainPathDirection === 2) {
+            // Main path is vertical, branch horizontally
+            direction = Math.random() < 0.5 ? 1 : 3;
+        } else {
+            // Main path is horizontal, branch vertically
+            direction = Math.random() < 0.5 ? 0 : 2;
+        }
+        
+        // Add starting point
+        branch.push({ x, y });
+        
+        // Generate branch path
+        for (let i = 1; i < length; i++) {
+            // Occasionally change direction
+            if (Math.random() < 0.2) {
+                // Change direction slightly (-1, 0, or 1)
+                const turn = Math.floor(Math.random() * 3) - 1;
+                direction = (direction + turn + 4) % 4;
+            }
+            
+            // Move in current direction
+            switch (direction) {
+                case 0: y--; break; // Up
+                case 1: x++; break; // Right
+                case 2: y++; break; // Down
+                case 3: x--; break; // Left
+            }
+            
+            // Check if this position is already in any path
+            const posKey = `${x},${y}`;
+            if (this.allRoadTiles.has(posKey)) {
+                // If this is not a dead end, we can connect to existing roads
+                if (!isDeadEnd && i > length / 2) {
+                    branch.push({ x, y });
+                    break;
+                }
+                
+                // Otherwise, try a different direction
+                const newDirection = (direction + 1 + Math.floor(Math.random() * 3)) % 4;
+                direction = newDirection;
+                
+                // Reset position and try again
+                x = branch[i-1].x;
+                y = branch[i-1].y;
+                
+                // Move in new direction
+                switch (direction) {
+                    case 0: y--; break; // Up
+                    case 1: x++; break; // Right
+                    case 2: y++; break; // Down
+                    case 3: x--; break; // Left
+                }
+            }
+            
+            // Add point to branch
+            branch.push({ x, y });
+            this.allRoadTiles.add(posKey);
+        }
+        
+        return branch;
+    }
+    
+    getDirectionAt(index) {
+        // Determine the direction at a specific point in the path
+        if (index < 0 || index >= this.roadPath.length - 1) {
+            return 0;
+        }
+        
+        const current = this.roadPath[index];
+        const next = this.roadPath[index + 1];
+        
+        const dx = next.x - current.x;
+        const dy = next.y - current.y;
+        
+        if (Math.abs(dx) > Math.abs(dy)) {
+            return dx > 0 ? 1 : 3; // Right or Left
+        } else {
+            return dy > 0 ? 2 : 0; // Down or Up
+        }
     }
     
     generateObstacles(density) {
-        // Add obstacles along the track
-        // Reduce density by 1/3 to match the spawning reduction
+        // Add obstacles along all road paths
         const reducedDensity = density / 3;
         
-        for (let i = 10; i < this.trackLength - 5; i += 3) { // Skip more segments to reduce count
-            if (Math.random() < reducedDensity) {
+        // Add obstacles along main path
+        this.addObstaclesToPath(this.roadPath, reducedDensity, 10, this.roadPath.length - 5);
+        
+        // Add obstacles along branch paths
+        this.branchPaths.forEach(branch => {
+            this.addObstaclesToPath(branch, reducedDensity * 0.8, 5, branch.length - 3);
+        });
+        
+        // Add obstacles along dead ends
+        this.deadEnds.forEach(deadEnd => {
+            this.addObstaclesToPath(deadEnd, reducedDensity * 1.2, 5, deadEnd.length - 3);
+        });
+    }
+    
+    addObstaclesToPath(path, density, startOffset, endIndex) {
+        // Skip segments to reduce count
+        for (let i = startOffset; i < endIndex; i += 3) {
+            if (Math.random() < density) {
                 // Get current road segment
-                const segment = this.roadPath[i];
+                const segment = path[i];
                 
                 // Determine obstacle position (left or right of road)
                 const side = Math.random() > 0.5 ? 1 : -1;
-                // Increase offset to place drones near but not on the road
-                const offset = Math.floor(Math.random() * 2) + 2; // Now 2-3 tiles away instead of 1-2
+                const offset = Math.floor(Math.random() * 2) + 2; // 2-3 tiles away
                 
                 // Calculate obstacle position
                 let obstacleX, obstacleY;
                 
                 // Determine direction of road segment
-                const nextSegment = this.roadPath[i + 1];
+                const nextSegment = path[Math.min(i + 1, path.length - 1)];
                 const dx = nextSegment.x - segment.x;
                 const dy = nextSegment.y - segment.y;
                 
@@ -195,28 +508,33 @@ class Track {
                     obstacleY = segment.y;
                 }
                 
-                // Add obstacle - only use drones near the road, not on it
-                this.obstacles.push({
-                    x: obstacleX,
-                    y: obstacleY,
-                    type: 'drone'
-                });
+                // Check if position is already occupied
+                const posKey = `${obstacleX},${obstacleY}`;
+                if (!this.allRoadTiles.has(posKey)) {
+                    // Add obstacle - only use drones near the road, not on it
+                    this.obstacles.push({
+                        x: obstacleX,
+                        y: obstacleY,
+                        type: 'drone'
+                    });
+                }
             }
         }
     }
     
     generateDecorations(buildingDensity) {
-        // Add decorations around the track
-        const maxDistance = 15; // Maximum distance from road (increased by 1.5x)
+        // Add decorations around all road paths
+        const maxDistance = 15; // Maximum distance from road
         
         // Create a grid to track occupied positions
         const occupiedPositions = new Set();
         
-        // Mark road positions as occupied
-        this.roadPath.forEach(pos => {
+        // Mark all road positions as occupied
+        this.allRoadTiles.forEach(posKey => {
+            const [x, y] = posKey.split(',').map(Number);
             for (let dx = -1; dx <= 1; dx++) {
                 for (let dy = -1; dy <= 1; dy++) {
-                    occupiedPositions.add(`${pos.x + dx},${pos.y + dy}`);
+                    occupiedPositions.add(`${x + dx},${y + dy}`);
                 }
             }
         });
@@ -241,7 +559,6 @@ class Track {
                 if (!this.isNearRoad(x, y, maxDistance)) continue;
                 
                 // Add decoration based on probability
-                // Increased probability for trees to compensate for removing them from obstacles
                 if (Math.random() < 0.15) {
                     const isBuilding = Math.random() < buildingDensity;
                     
@@ -259,13 +576,37 @@ class Track {
     }
     
     addBillboards(texts) {
-        // Add billboards with Romanian text
+        // Add billboards with Romanian text along all paths
         const billboardCount = Math.min(texts.length, 5);
-        const segmentLength = Math.floor(this.trackLength / (billboardCount + 1));
         
-        for (let i = 1; i <= billboardCount; i++) {
+        // Place billboards along main path
+        const mainPathBillboards = Math.ceil(billboardCount * 0.6); // 60% on main path
+        this.addBillboardsToPath(this.roadPath, texts.slice(0, mainPathBillboards), mainPathBillboards);
+        
+        // Place remaining billboards on branches
+        let remainingTexts = texts.slice(mainPathBillboards);
+        
+        // Distribute remaining billboards between branches and dead ends
+        if (remainingTexts.length > 0 && this.branchPaths.length > 0) {
+            const branchBillboards = Math.min(remainingTexts.length, this.branchPaths.length);
+            
+            for (let i = 0; i < branchBillboards; i++) {
+                const branch = this.branchPaths[i % this.branchPaths.length];
+                this.addBillboardsToPath(branch, [remainingTexts[i]], 1);
+            }
+        }
+    }
+    
+    addBillboardsToPath(path, texts, count) {
+        if (path.length < 10 || texts.length === 0) return;
+        
+        const segmentLength = Math.floor(path.length / (count + 1));
+        
+        for (let i = 1; i <= count; i++) {
             const segmentIndex = i * segmentLength;
-            const segment = this.roadPath[segmentIndex];
+            if (segmentIndex >= path.length) continue;
+            
+            const segment = path[segmentIndex];
             
             // Determine billboard position (left or right of road)
             const side = Math.random() > 0.5 ? 1 : -1;
@@ -275,7 +616,7 @@ class Track {
             let billboardX, billboardY;
             
             // Determine direction of road segment
-            const nextSegment = this.roadPath[Math.min(segmentIndex + 1, this.trackLength - 1)];
+            const nextSegment = path[Math.min(segmentIndex + 1, path.length - 1)];
             const dx = nextSegment.x - segment.x;
             const dy = nextSegment.y - segment.y;
             
@@ -320,8 +661,8 @@ class Track {
     
     addFinishLine() {
         // Add finish line at end of track
-        const lastSegment = this.roadPath[this.trackLength - 1];
-        const prevSegment = this.roadPath[this.trackLength - 2];
+        const lastSegment = this.roadPath[this.roadPath.length - 1];
+        const prevSegment = this.roadPath[this.roadPath.length - 2];
         
         // Determine finish line orientation
         const dx = lastSegment.x - prevSegment.x;
@@ -335,10 +676,12 @@ class Track {
     }
     
     isNearRoad(x, y, maxDistance) {
-        // Check if position is near any road segment
+        // Check if position is near any road segment (main path, branches, or dead ends)
+        
+        // Check main path
         for (const segment of this.roadPath) {
             const distance = Math.sqrt(
-                Math.pow(segment.x - x, 2) + 
+                Math.pow(segment.x - x, 2) +
                 Math.pow(segment.y - y, 2)
             );
             
@@ -347,15 +690,77 @@ class Track {
             }
         }
         
+        // Check branch paths
+        for (const branch of this.branchPaths) {
+            for (const segment of branch) {
+                const distance = Math.sqrt(
+                    Math.pow(segment.x - x, 2) +
+                    Math.pow(segment.y - y, 2)
+                );
+                
+                if (distance <= maxDistance) {
+                    return true;
+                }
+            }
+        }
+        
+        // Check dead ends
+        for (const deadEnd of this.deadEnds) {
+            for (const segment of deadEnd) {
+                const distance = Math.sqrt(
+                    Math.pow(segment.x - x, 2) +
+                    Math.pow(segment.y - y, 2)
+                );
+                
+                if (distance <= maxDistance) {
+                    return true;
+                }
+            }
+        }
+        
         return false;
     }
     
     getMaxX() {
-        return Math.max(...this.roadPath.map(p => p.x));
+        // Get maximum X coordinate from all road segments
+        let maxX = Math.max(...this.roadPath.map(p => p.x));
+        
+        // Check branch paths
+        this.branchPaths.forEach(branch => {
+            if (branch.length > 0) {
+                maxX = Math.max(maxX, ...branch.map(p => p.x));
+            }
+        });
+        
+        // Check dead ends
+        this.deadEnds.forEach(deadEnd => {
+            if (deadEnd.length > 0) {
+                maxX = Math.max(maxX, ...deadEnd.map(p => p.x));
+            }
+        });
+        
+        return maxX;
     }
     
     getMaxY() {
-        return Math.max(...this.roadPath.map(p => p.y));
+        // Get maximum Y coordinate from all road segments
+        let maxY = Math.max(...this.roadPath.map(p => p.y));
+        
+        // Check branch paths
+        this.branchPaths.forEach(branch => {
+            if (branch.length > 0) {
+                maxY = Math.max(maxY, ...branch.map(p => p.y));
+            }
+        });
+        
+        // Check dead ends
+        this.deadEnds.forEach(deadEnd => {
+            if (deadEnd.length > 0) {
+                maxY = Math.max(maxY, ...deadEnd.map(p => p.y));
+            }
+        });
+        
+        return maxY;
     }
     
     getStartPosition() {
@@ -369,7 +774,7 @@ class Track {
     
     getFinishPosition() {
         // Return finish position (last road segment)
-        const finishSegment = this.roadPath[this.trackLength - 1];
+        const finishSegment = this.roadPath[this.roadPath.length - 1];
         return {
             x: finishSegment.x * this.tileSize + this.tileSize / 2,
             y: finishSegment.y * this.tileSize + this.tileSize / 2
@@ -430,14 +835,67 @@ class Track {
     }
     
     renderRoad() {
-        // Render road tiles
-        for (const segment of this.roadPath) {
+        // Render all road paths
+        this.renderRoadPath(this.roadPath);
+        
+        // Render branch paths
+        this.branchPaths.forEach(branch => {
+            this.renderRoadPath(branch);
+        });
+        
+        // Render dead ends
+        this.deadEnds.forEach(deadEnd => {
+            this.renderRoadPath(deadEnd);
+        });
+        
+        // Add visual indicators at intersections
+        this.markIntersections();
+    }
+    
+    renderRoadPath(path) {
+        // Render road tiles for a path
+        for (const segment of path) {
             this.roadTiles.create(
                 segment.x * this.tileSize + this.tileSize / 2,
                 segment.y * this.tileSize + this.tileSize / 2,
                 'road'
             );
         }
+    }
+    
+    markIntersections() {
+        // Add visual indicators at intersection points
+        // Find points where branches connect to the main path
+        this.branchPaths.forEach(branch => {
+            if (branch.length > 0) {
+                const startPoint = branch[0];
+                
+                // Create a small marker at the intersection
+                const marker = this.scene.add.circle(
+                    startPoint.x * this.tileSize + this.tileSize / 2,
+                    startPoint.y * this.tileSize + this.tileSize / 2,
+                    this.tileSize / 6,
+                    0xffff00,
+                    0.7
+                );
+            }
+        });
+        
+        // Mark dead ends with red indicators
+        this.deadEnds.forEach(deadEnd => {
+            if (deadEnd.length > 0) {
+                const endPoint = deadEnd[deadEnd.length - 1];
+                
+                // Create a small marker at the dead end
+                const marker = this.scene.add.circle(
+                    endPoint.x * this.tileSize + this.tileSize / 2,
+                    endPoint.y * this.tileSize + this.tileSize / 2,
+                    this.tileSize / 6,
+                    0xff0000,
+                    0.7
+                );
+            }
+        });
     }
     
     renderObstacles() {

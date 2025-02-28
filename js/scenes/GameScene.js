@@ -17,6 +17,7 @@ class GameScene extends Phaser.Scene {
         this.missionComplete = false;
         this.enemySpawnTimer = null;
         this.enemiesArray = []; // Array to track enemy objects
+        this.gameStarted = false; // Flag to track if game has started
         
         // Create groups
         this.enemies = this.physics.add.group(); // Changed to a group instead of array
@@ -51,11 +52,17 @@ class GameScene extends Phaser.Scene {
         this.finishLine = this.physics.add.sprite(finishPos.x, finishPos.y, 'road').setVisible(false);
         this.finishLine.setSize(this.track.tileSize * 2, this.track.tileSize * 2);
         this.physics.add.overlap(this.player.sprite, this.finishLine, this.handleFinishLineCollision, null, this);
-        
         // Create UI
         this.createUI();
         
-        // Start enemy spawning
+        // If this is Bucharest (first city), show controls
+        if (this.currentCity === 'Bucharest') {
+            this.showControlsDialog();
+        } else {
+            // For other cities, start the game immediately
+            this.gameStarted = true;
+            this.startEnemySpawning();
+        }
         this.startEnemySpawning();
         
         // Play game music
@@ -68,8 +75,8 @@ class GameScene extends Phaser.Scene {
     }
     
     update(time, delta) {
-        // Skip update if game is over
-        if (this.gameOver) return;
+        // Skip update if game is over or not started
+        if (this.gameOver || !this.gameStarted) return;
         
         // Update player
         if (this.player) {
@@ -365,6 +372,87 @@ class GameScene extends Phaser.Scene {
         if (this.player) {
             this.player.isOnGrass = false;
         }
+    }
+    
+    showControlsDialog() {
+        // Create a semi-transparent background
+        const { width, height } = this.cameras.main;
+        const bg = this.add.rectangle(width/2, height/2, width, height, 0x000000, 0.7)
+            .setScrollFactor(0)
+            .setDepth(200);
+        
+        // Create controls dialog
+        const dialogWidth = 400;
+        const dialogHeight = 300;
+        const dialog = this.add.rectangle(width/2, height/2, dialogWidth, dialogHeight, 0x333333)
+            .setScrollFactor(0)
+            .setDepth(201);
+            
+        // Add dialog border
+        const border = this.add.rectangle(width/2, height/2, dialogWidth, dialogHeight)
+            .setScrollFactor(0)
+            .setStrokeStyle(2, 0xffffff)
+            .setDepth(202);
+        
+        // Add title
+        const title = this.add.text(width/2, height/2 - 120, 'CONTROLS', {
+            font: 'bold 24px Arial',
+            fill: '#ffffff'
+        }).setScrollFactor(0).setOrigin(0.5).setDepth(202);
+        
+        // Add controls text
+        const controlsText = this.add.text(width/2, height/2 - 50,
+            'W - Accelerate\nS - Brake/Reverse\nA - Turn Left\nD - Turn Right\nSPACE - Shoot', {
+            font: '18px Arial',
+            fill: '#ffffff',
+            align: 'center'
+        }).setScrollFactor(0).setOrigin(0.5).setDepth(202);
+        
+        // Add OK button
+        const buttonWidth = 100;
+        const buttonHeight = 40;
+        const button = this.add.rectangle(width/2, height/2 + 80, buttonWidth, buttonHeight, 0x3498db)
+            .setScrollFactor(0)
+            .setInteractive()
+            .setDepth(202);
+            
+        const buttonText = this.add.text(width/2, height/2 + 80, 'OK', {
+            font: 'bold 18px Arial',
+            fill: '#ffffff'
+        }).setScrollFactor(0).setOrigin(0.5).setDepth(203);
+        
+        // Add hover effect
+        button.on('pointerover', () => {
+            button.setFillStyle(0x2980b9);
+        });
+        
+        button.on('pointerout', () => {
+            button.setFillStyle(0x3498db);
+        });
+        
+        // Add click effect
+        button.on('pointerdown', () => {
+            button.setFillStyle(0x1c6ea4);
+        });
+        
+        // Start game when OK is clicked
+        button.on('pointerup', () => {
+            // Remove dialog
+            bg.destroy();
+            dialog.destroy();
+            border.destroy();
+            title.destroy();
+            controlsText.destroy();
+            button.destroy();
+            buttonText.destroy();
+            
+            // Start the game
+            this.gameStarted = true;
+            this.startEnemySpawning();
+            
+            // Show a "Go!" message
+            this.showMessage('GO!', 1500);
+        });
     }
     
     playerDied() {
