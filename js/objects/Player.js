@@ -24,6 +24,12 @@ class Player {
         this.invulnerableTime = 1000; // ms
         this.isOnGrass = false; // Flag to track if player is on grass
         
+        // Shockwave ability properties
+        this.shockwaveUnlocked = false; // Will be set to true after first city is completed
+        this.shockwaveCooldown = 10000; // 10 seconds cooldown
+        this.lastShockwaveUsed = 0;
+        this.shockwaveRadius = 300; // Radius of the shockwave effect
+        
         // Acceleration properties for gradual speed changes
         this.accelerationFactor = 0.03; // Adjust this to control acceleration speed (lower = slower)
         this.currentVelocityX = 0;
@@ -69,12 +75,16 @@ class Player {
         // Setup input
         this.cursors = scene.input.keyboard.createCursorKeys();
         this.spaceKey = scene.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.SPACE);
+        this.shockwaveKey = scene.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.C);
         
         // Create health bar
         this.createHealthBar();
         
         // Create ammo display
         this.createAmmoDisplay();
+        
+        // Create shockwave cooldown display (initially hidden)
+        this.createShockwaveDisplay();
     }
     
     update(time, delta) {
@@ -84,6 +94,9 @@ class Player {
         // Handle shooting
         this.handleShooting(time);
         
+        // Handle shockwave
+        this.handleShockwave(time);
+        
         // Update bullets
         this.updateBullets();
         
@@ -92,6 +105,93 @@ class Player {
         
         // Update UI
         this.updateUI();
+    }
+    
+    handleShockwave(time) {
+        // Skip if shockwave is not unlocked
+        if (!this.shockwaveUnlocked) return;
+        
+        // Check if shockwave key is pressed and cooldown has passed
+        if (this.shockwaveKey.isDown && time > this.lastShockwaveUsed + this.shockwaveCooldown) {
+            // Trigger shockwave
+            this.activateShockwave();
+            
+            // Update last used time
+            this.lastShockwaveUsed = time;
+        }
+    }
+    
+    activateShockwave() {
+        // Create shockwave visual effect
+        const shockwave = this.scene.add.circle(
+            this.sprite.x,
+            this.sprite.y,
+            10,
+            0x00ffff,
+            0.8
+        );
+        shockwave.setDepth(20);
+        
+        // Animate the shockwave expanding outward
+        this.scene.tweens.add({
+            targets: shockwave,
+            radius: this.shockwaveRadius,
+            alpha: 0,
+            duration: 500,
+            ease: 'Cubic.Out',
+            onComplete: () => {
+                shockwave.destroy();
+            }
+        });
+        
+        // Find all enemies within the shockwave radius
+        const enemiesHit = this.scene.enemiesArray.filter(enemy => {
+            if (!enemy.active) return false;
+            
+            const distance = Phaser.Math.Distance.Between(
+                this.sprite.x, this.sprite.y,
+                enemy.sprite.x, enemy.sprite.y
+            );
+            
+            return distance <= this.shockwaveRadius;
+        });
+        
+        // Destroy all enemies within radius
+        enemiesHit.forEach(enemy => {
+            // Create a special destruction effect
+            this.createShockwaveDestructionEffect(enemy.sprite.x, enemy.sprite.y);
+            
+            // Destroy the enemy
+            enemy.takeDamage(enemy.health);
+            
+            // Add bonus score
+            this.scene.addScore(enemy.scoreValue);
+        });
+        
+        // Play shockwave sound
+        if (this.scene.sound.get('shoot')) {
+            const shockwaveSound = this.scene.sound.get('shoot');
+            shockwaveSound.setDetune(600);
+            shockwaveSound.setVolume(0.5);
+            shockwaveSound.play();
+        }
+    }
+    
+    createShockwaveDestructionEffect(x, y) {
+        // Create a more dramatic explosion effect for shockwave kills
+        const explosion = this.scene.add.particles(x, y, 'bullet', {
+            speed: { min: 50, max: 200 },
+            scale: { start: 1.5, end: 0 },
+            lifespan: 1000,
+            blendMode: 'ADD',
+            tint: 0x00ffff,
+            quantity: 25
+        });
+        
+        // Auto-destroy particles after animation completes
+        this.scene.time.delayedCall(1000, () => {
+            explosion.destroy();
+        });
     }
     
     updateEngineSound(time, delta) {
@@ -394,6 +494,26 @@ class Player {
         ).setScrollFactor(0).setOrigin(0.5).setDepth(100);
     }
     
+    createShockwaveDisplay() {
+        // Create shockwave background
+        this.shockwaveBg = this.scene.add.rectangle(
+            100, 90, 200, 20, 0x000000, 0.7
+        ).setScrollFactor(0).setDepth(100).setVisible(false);
+        
+        // Create shockwave bar (for cooldown)
+        this.shockwaveBar = this.scene.add.rectangle(
+            100, 90, 200, 20, 0x00ffff, 1
+        ).setScrollFactor(0).setOrigin(0, 0.5).setDepth(100).setVisible(false);
+        
+        // Create shockwave text
+        this.shockwaveText = this.scene.add.text(
+            100, 90, 'Shockwave [C]', {
+                font: '14px Arial',
+                fill: '#ffffff'
+            }
+        ).setScrollFactor(0).setOrigin(0.5).setDepth(100).setVisible(false);
+    }
+    
     updateUI() {
         // Update health bar
         const healthPercent = this.health / this.maxHealth;
@@ -410,6 +530,34 @@ class Player {
         
         // Update ammo text
         this.ammoText.setText(`Ammo: ${this.ammo}`);
+        
+        // Update shockwave display
+        if (this.shockwaveUnlocked) {
+            // Show shockwave UI elements if they're hidden
+            if (!this.shockwaveBg.visible) {
+                this.shockwaveBg.setVisible(true);
+                this.shockwaveBar.setVisible(true);
+                this.shockwaveText.setVisible(true);
+            }
+            
+            // Calculate cooldown percentage
+            const currentTime = this.scene.time.now;
+            const timeSinceLastUse = currentTime - this.lastShockwaveUsed;
+            const cooldownPercent = Math.min(timeSinceLastUse / this.shockwaveCooldown, 1);
+            
+            // Update cooldown bar
+            this.shockwaveBar.width = 200 * cooldownPercent;
+            
+            // Update color based on cooldown status
+            if (cooldownPercent >= 1) {
+                this.shockwaveBar.fillColor = 0x00ffff; // Cyan when ready
+                this.shockwaveText.setText('Shockwave [C] - READY');
+            } else {
+                this.shockwaveBar.fillColor = 0x3498db; // Blue when charging
+                const remainingSeconds = Math.ceil((this.shockwaveCooldown - timeSinceLastUse) / 1000);
+                this.shockwaveText.setText(`Shockwave [C] - ${remainingSeconds}s`);
+            }
+        }
     }
     
     destroy() {
@@ -426,5 +574,12 @@ class Player {
         this.healthText.destroy();
         this.ammoBg.destroy();
         this.ammoText.destroy();
+        
+        // Destroy shockwave UI elements if they exist
+        if (this.shockwaveBg) {
+            this.shockwaveBg.destroy();
+            this.shockwaveBar.destroy();
+            this.shockwaveText.destroy();
+        }
     }
 }

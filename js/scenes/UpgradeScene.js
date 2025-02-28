@@ -11,6 +11,9 @@ class UpgradeScene extends Phaser.Scene {
         // Get score from previous scene
         this.score = data.score || 0;
         
+        // Check if shockwave should be unlocked
+        this.unlockShockwave = data.unlockShockwave || false;
+        
         // Set available upgrade points if not already set
         if (this.game.gameState.availableUpgradePoints === undefined) {
             this.game.gameState.availableUpgradePoints = 2;
@@ -46,6 +49,14 @@ class UpgradeScene extends Phaser.Scene {
         
         // Upgrade options
         this.createUpgradeOptions(width, 270);
+        
+        // Check if shockwave should be unlocked
+        if (this.unlockShockwave) {
+            // Unlock shockwave ability for all future levels
+            this.time.delayedCall(1000, () => {
+                this.showShockwaveUnlockMessage();
+            });
+        }
         
         // Continue button - position it at a fixed distance from the bottom of the screen
         // to ensure it's always visible
@@ -280,6 +291,88 @@ class UpgradeScene extends Phaser.Scene {
             onComplete: () => {
                 message.destroy();
             }
+        });
+    }
+    
+    showShockwaveUnlockMessage() {
+        const { width, height } = this.cameras.main;
+        
+        // Create a semi-transparent background
+        const bg = this.add.rectangle(width/2, height/2, width, height, 0x000000, 0.8)
+            .setDepth(200);
+        
+        // Create unlock message container
+        const container = this.add.container(width/2, height/2).setDepth(201);
+        
+        // Create message background
+        const messageBg = this.add.rectangle(0, 0, 500, 300, 0x333333)
+            .setStrokeStyle(4, 0x00ffff);
+        container.add(messageBg);
+        
+        // Create title
+        const title = this.add.text(0, -120, 'NEW ABILITY UNLOCKED!', {
+            font: 'bold 28px Arial',
+            fill: '#00ffff'
+        }).setOrigin(0.5);
+        container.add(title);
+        
+        // Create shockwave icon (using a circle as placeholder)
+        const icon = this.add.circle(0, -50, 40, 0x00ffff, 0.8);
+        container.add(icon);
+        
+        // Create pulse animation for the icon
+        this.tweens.add({
+            targets: icon,
+            scale: { from: 0.8, to: 1.2 },
+            alpha: { from: 0.8, to: 0.4 },
+            duration: 1000,
+            yoyo: true,
+            repeat: -1
+        });
+        
+        // Create description
+        const description = this.add.text(0, 30,
+            "SHOCKWAVE\n\nDestroy all enemies around you with a powerful shockwave.\n\nPress 'C' key to activate.\n\nCooldown: 10 seconds", {
+            font: '18px Arial',
+            fill: '#ffffff',
+            align: 'center'
+        }).setOrigin(0.5);
+        container.add(description);
+        
+        // Create continue button
+        const button = this.add.rectangle(0, 120, 200, 50, 0x00ffff)
+            .setInteractive();
+        container.add(button);
+        
+        const buttonText = this.add.text(0, 120, 'CONTINUE', {
+            font: 'bold 18px Arial',
+            fill: '#000000'
+        }).setOrigin(0.5);
+        container.add(buttonText);
+        
+        // Add hover effect
+        button.on('pointerover', () => {
+            button.setFillStyle(0x66ffff);
+        });
+        
+        button.on('pointerout', () => {
+            button.setFillStyle(0x00ffff);
+        });
+        
+        // Add click effect
+        button.on('pointerdown', () => {
+            button.setFillStyle(0x009999);
+        });
+        
+        // Close dialog when continue is clicked
+        button.on('pointerup', () => {
+            // Remove dialog
+            bg.destroy();
+            container.destroy();
+            
+            // Set shockwave as unlocked in game state
+            this.game.gameState.shockwaveUnlocked = true;
+            GameStorage.saveGame(this.game.gameState);
         });
     }
 }

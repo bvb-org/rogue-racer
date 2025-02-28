@@ -32,6 +32,11 @@ class GameScene extends Phaser.Scene {
         const startPos = this.track.getStartPosition();
         this.player = new Player(this, startPos.x, startPos.y);
         
+        // Check if shockwave is unlocked in game state
+        if (this.game.gameState.shockwaveUnlocked) {
+            this.player.shockwaveUnlocked = true;
+        }
+        
         // Set up camera to follow player
         this.cameras.main.startFollow(this.player.sprite);
         this.cameras.main.setZoom(0.85);
@@ -348,6 +353,9 @@ class GameScene extends Phaser.Scene {
         this.addScore(bonus);
         this.showMessage(`Bonus: +${bonus} points`, 3000);
         
+        // Check if this is the first city completed (Bucharest)
+        const isFirstCityCompleted = this.currentCity === 'Bucharest';
+        
         // Transition to upgrade scene after delay
         this.time.delayedCall(3000, () => {
             // Stop game music
@@ -356,7 +364,10 @@ class GameScene extends Phaser.Scene {
             }
             
             // Start upgrade scene
-            this.scene.start('UpgradeScene', { score: this.score });
+            this.scene.start('UpgradeScene', {
+                score: this.score,
+                unlockShockwave: isFirstCityCompleted
+            });
         });
     }
     
