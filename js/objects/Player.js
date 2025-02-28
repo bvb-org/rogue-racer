@@ -82,8 +82,8 @@ class Player {
         
         // Update speed based on terrain
         if (this.isOnGrass) {
-            // 50% slower on grass
-            this.speed = this.baseSpeed * 0.5;
+            // 70% slower on grass
+            this.speed = this.baseSpeed * 0.7;
         } else {
             // Normal speed on road
             this.speed = this.baseSpeed;
