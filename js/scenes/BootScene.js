@@ -91,10 +91,16 @@ class BootScene extends Phaser.Scene {
         // These will be replaced with proper assets later
         
         const createPlaceholder = (name, width, height, color) => {
-            const graphics = this.make.graphics();
+            // Create graphics for placeholder textures
+            const graphics = this.make.graphics({ x: 0, y: 0, add: false });
+            
+            // Set fill style and draw rectangle
             graphics.fillStyle(color);
             graphics.fillRect(0, 0, width, height);
-            graphics.generateTexture(name, width, height);
+            
+            // Generate texture with willReadFrequently option
+            // This addresses the Canvas2D performance warning
+            graphics.generateTexture(name, width, height, 0, 0, { willReadFrequently: true });
             graphics.destroy();
         };
 

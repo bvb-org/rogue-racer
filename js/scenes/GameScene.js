@@ -16,9 +16,10 @@ class GameScene extends Phaser.Scene {
         this.gameOver = false;
         this.missionComplete = false;
         this.enemySpawnTimer = null;
-        this.enemies = [];
+        this.enemiesArray = []; // Array to track enemy objects
         
         // Create groups
+        this.enemies = this.physics.add.group(); // Changed to a group instead of array
         this.enemyGroup = this.physics.add.group();
         this.pickups = this.physics.add.group();
         
@@ -69,16 +70,21 @@ class GameScene extends Phaser.Scene {
         if (this.player) {
             this.player.update(time, delta);
         }
-        
         // Update enemies
-        this.enemies.forEach(enemy => {
+        this.enemiesArray.forEach(enemy => {
             if (enemy.active) {
                 enemy.update();
             }
         });
         
         // Clean up destroyed enemies
-        this.enemies = this.enemies.filter(enemy => enemy.active);
+        this.enemiesArray = this.enemiesArray.filter(enemy => enemy.active);
+        
+        // Clean up destroyed enemies from the physics group
+        const inactiveEnemies = this.enemies.getChildren().filter(enemy => !enemy.active);
+        inactiveEnemies.forEach(enemy => {
+            this.enemies.remove(enemy);
+        });
         
         // Update UI
         this.updateUI();
@@ -150,8 +156,9 @@ class GameScene extends Phaser.Scene {
                 if (!this.gameOver && this.player && this.player.sprite.active) {
                     const enemy = Enemy.spawnEnemy(this, 'enemy-car');
                     if (enemy) {
-                        this.enemies.push(enemy);
+                        this.enemiesArray.push(enemy);
                         this.enemyGroup.add(enemy.sprite);
+                        this.enemies.add(enemy.sprite); // Add to the enemies group as well
                     }
                 }
             },
@@ -166,8 +173,9 @@ class GameScene extends Phaser.Scene {
                 if (!this.gameOver && this.player && this.player.sprite.active) {
                     const enemy = Enemy.spawnEnemy(this, 'drone');
                     if (enemy) {
-                        this.enemies.push(enemy);
+                        this.enemiesArray.push(enemy);
                         this.enemyGroup.add(enemy.sprite);
+                        this.enemies.add(enemy.sprite); // Add to the enemies group as well
                     }
                 }
             },

@@ -53,7 +53,7 @@ The game includes Docker configuration for easy deployment on a Raspberry Pi or 
 
 1. Clone or download this repository to your Raspberry Pi:
    ```
-   git clone https://github.com/yourusername/rogue-racer.git
+   git clone https://github.com/qSharpy/rogue-racer.git
    cd rogue-racer
    ```
 
