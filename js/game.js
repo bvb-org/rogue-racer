@@ -1,8 +1,8 @@
 // Game configuration
 const config = {
     type: Phaser.AUTO,
-    width: 800,
-    height: 600,
+    width: window.innerWidth,
+    height: window.innerHeight,
     parent: 'game-container',
     physics: {
         default: 'arcade',
@@ -10,6 +10,10 @@ const config = {
             gravity: { y: 0 },
             debug: false
         }
+    },
+    scale: {
+        mode: Phaser.Scale.RESIZE,
+        autoCenter: Phaser.Scale.CENTER_BOTH
     },
     scene: [
         BootScene,
@@ -59,6 +63,13 @@ window.onload = function() {
     if (savedGame) {
         Object.assign(game.gameState, savedGame);
     }
+    
+    // Handle window resize
+    window.addEventListener('resize', function() {
+        // The Scale Manager will handle resizing the canvas
+        // but we can add additional logic here if needed
+        console.log('Window resized to: ' + window.innerWidth + 'x' + window.innerHeight);
+    });
     
     // Fix for AudioContext issue
     // We need to resume the AudioContext after user interaction
