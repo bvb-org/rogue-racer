@@ -1,0 +1,12 @@
+version: '3'
+
+services:
+  rogue-racer:
+    build: .
+    container_name: rogue-racer
+    ports:
+      - "8080:80"
+    restart: unless-stopped
+    volumes:
+      # Optional: Mount the game files for easy updates without rebuilding
+      - ./:/usr/share/nginx/html
