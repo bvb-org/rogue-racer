@@ -1,0 +1,30 @@
+name: Deploy to Raspberry Pi
+
+on:
+  workflow_dispatch:
+    # This allows manual triggering of the workflow
+
+jobs:
+  deploy:
+    name: Deploy to Raspberry Pi
+    runs-on: self-hosted
+    # This will use the self-hosted runner on the Raspberry Pi
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+        
+      - name: Display deployment start message
+        run: echo "Starting deployment to Raspberry Pi..."
+        
+      - name: Pull latest Docker images (if any)
+        run: docker compose pull
+        
+      - name: Deploy with Docker Compose
+        run: docker compose up -d
+        
+      - name: Display container status
+        run: docker compose ps
+        
+      - name: Display deployment complete message
+        run: echo "Deployment to Raspberry Pi completed successfully!"

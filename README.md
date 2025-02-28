@@ -72,7 +72,7 @@ The game includes Docker configuration for easy deployment on a Raspberry Pi or 
 - Docker and Docker Compose installed on your Raspberry Pi 🐳
 - Git (optional) 📦
 
-#### Deployment Steps
+#### Manual Deployment Steps
 
 1. Clone or download this repository to your Raspberry Pi:
    ```
@@ -84,6 +84,22 @@ The game includes Docker configuration for easy deployment on a Raspberry Pi or 
    ```
    docker-compose up -d
    ```
+
+3. Access the game by navigating to `http://localhost:8080` in a web browser 🌐
+
+#### Automated Deployment with GitHub Actions
+
+The repository includes a GitHub Actions workflow for automated deployment to a Raspberry Pi:
+
+1. Set up a self-hosted GitHub Actions runner on your Raspberry Pi:
+   - Go to your GitHub repository → Settings → Actions → Runners
+   - Click "New self-hosted runner" and follow the instructions for Linux
+   - Make sure the runner is configured as a service to run at startup
+
+2. Trigger the deployment:
+   - Go to your GitHub repository → Actions → "Deploy to Raspberry Pi" workflow
+   - Click "Run workflow" to manually trigger the deployment
+   - The workflow will automatically check out the code and deploy using Docker Compose
 
 3. Access the game by navigating to `http://localhost:8080` in a web browser 🌐
 
