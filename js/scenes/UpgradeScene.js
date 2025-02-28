@@ -26,29 +26,52 @@ class UpgradeScene extends Phaser.Scene {
         // Background
         this.add.rectangle(0, 0, width, height, 0x0a0a0a).setOrigin(0);
         
-        // Title
-        this.add.text(width / 2, 50, 'UPGRADE YOUR VEHICLE', {
+        // Add a subtle grid pattern to the background
+        for (let x = 0; x < width; x += 50) {
+            this.add.line(0, 0, x, 0, x, height, 0x222222).setOrigin(0);
+        }
+        for (let y = 0; y < height; y += 50) {
+            this.add.line(0, 0, 0, y, width, y, 0x222222).setOrigin(0);
+        }
+        
+        // Title with a decorative underline
+        this.add.text(width / 2, 40, 'UPGRADE YOUR VEHICLE', {
             font: 'bold 32px Arial',
             fill: '#ffffff'
         }).setOrigin(0.5);
         
+        // Decorative underline
+        const underline = this.add.rectangle(width / 2, 65, 400, 3, 0x3498db).setOrigin(0.5);
+        
         // Score display
-        this.add.text(width / 2, 100, `Mission Score: ${this.score}`, {
+        this.add.text(width / 2, 90, `Mission Score: ${this.score}`, {
             font: '24px Arial',
             fill: '#ffffff'
         }).setOrigin(0.5);
         
-        // Available upgrade points display
-        this.add.text(width / 2, 130, `Available Upgrade Points: ${this.game.gameState.availableUpgradePoints}`, {
-            font: '20px Arial',
+        // Available upgrade points display with highlight
+        const pointsText = `Available Upgrade Points: ${this.game.gameState.availableUpgradePoints}`;
+        const pointsDisplay = this.add.text(width / 2, 120, pointsText, {
+            font: 'bold 20px Arial',
             fill: '#f1c40f'
         }).setOrigin(0.5);
         
-        // City completion status
-        this.createCityStatus(width, 170);
+        // Add a subtle pulse animation to the upgrade points text
+        this.tweens.add({
+            targets: pointsDisplay,
+            scaleX: 1.05,
+            scaleY: 1.05,
+            duration: 1000,
+            yoyo: true,
+            repeat: -1,
+            ease: 'Sine.easeInOut'
+        });
         
-        // Upgrade options
-        this.createUpgradeOptions(width, 270);
+        // City completion status - positioned on the left side
+        this.createCityStatus(width, 180);
+        
+        // Upgrade options - positioned on the right side
+        this.createUpgradeOptions(width, 180);
         
         // Check if shockwave should be unlocked
         if (this.unlockShockwave) {
@@ -84,14 +107,22 @@ class UpgradeScene extends Phaser.Scene {
     }
     
     createCityStatus(x, y) {
-        // Create city completion status
-        this.add.text(x / 2, y, 'City Status:', {
-            font: 'bold 20px Arial',
+        // Create city completion status - positioned on the left side
+        const leftSideX = x * 0.25; // 1/4 of screen width
+        
+        this.add.text(leftSideX, y, 'City Status:', {
+            font: 'bold 22px Arial',
             fill: '#ffffff'
         }).setOrigin(0.5);
         
         const cities = this.game.gameState.cities;
-        const spacing = 40;
+        const spacing = 35; // Slightly reduced spacing
+        
+        // Create a background panel for city statuses
+        const panelHeight = (cities.length + 1) * spacing + 40; // Increased panel height
+        this.add.rectangle(leftSideX, y + panelHeight/2 + 10, 250, panelHeight, 0x222222, 0.5)
+            .setOrigin(0.5)
+            .setStrokeStyle(1, 0x444444);
         
         cities.forEach((city, index) => {
             // Check if mission exists before accessing its completed property
@@ -99,20 +130,20 @@ class UpgradeScene extends Phaser.Scene {
             const color = completed ? '#2ecc71' : '#e74c3c';
             const status = completed ? 'Completed' : 'Incomplete';
             
-            this.add.text(x / 2, y + (index + 1) * spacing, `${city}: ${status}`, {
+            // Increased the y offset to move cities lower (from y + 20 to y + 45)
+            this.add.text(leftSideX, y + 45 + (index) * spacing, `${city}: ${status}`, {
                 font: '18px Arial',
                 fill: color
             }).setOrigin(0.5);
         });
         
         // Check if all cities are completed
-        // Check if mission exists before accessing its completed property
         const allCompleted = cities.every(city =>
             this.game.gameState.missions[city] ? this.game.gameState.missions[city].completed : false
         );
         
         if (allCompleted) {
-            this.add.text(x / 2, y + (cities.length + 1) * spacing, 'All missions completed!', {
+            this.add.text(leftSideX, y + 45 + (cities.length) * spacing, 'All missions completed!', {
                 font: 'bold 20px Arial',
                 fill: '#f1c40f'
             }).setOrigin(0.5);
@@ -120,9 +151,11 @@ class UpgradeScene extends Phaser.Scene {
     }
     
     createUpgradeOptions(x, y) {
-        // Create upgrade options
-        this.add.text(x / 2, y, 'Upgrade Your Vehicle:', {
-            font: 'bold 20px Arial',
+        // Create upgrade options - positioned on the right side
+        const rightSideX = x * 0.75; // 3/4 of screen width
+        
+        this.add.text(rightSideX, y, 'Upgrade Your Vehicle:', {
+            font: 'bold 22px Arial',
             fill: '#ffffff'
         }).setOrigin(0.5);
         
@@ -133,21 +166,25 @@ class UpgradeScene extends Phaser.Scene {
             { key: 'health', name: 'Health', description: 'Increases vehicle health' }
         ];
         
-        const spacing = 70;
-        const buttonWidth = 200;
-        const descWidth = 200;
-        const levelWidth = 100;
+        const spacing = 85; // Increased spacing between upgrade options
+        const panelWidth = 450;
+        const panelHeight = upgrades.length * spacing + 40;
+        
+        // Create a background panel for upgrades
+        this.add.rectangle(rightSideX, y + panelHeight/2 + 20, panelWidth, panelHeight, 0x222222, 0.5)
+            .setOrigin(0.5)
+            .setStrokeStyle(1, 0x444444);
         
         upgrades.forEach((upgrade, index) => {
-            const yPos = y + (index + 1) * spacing;
+            const yPos = y + 40 + (index) * spacing;
             
             // Upgrade name and description
-            this.add.text(x / 2 - 250, yPos, upgrade.name, {
+            this.add.text(rightSideX - 200, yPos, upgrade.name, {
                 font: 'bold 18px Arial',
                 fill: '#ffffff'
             }).setOrigin(0, 0.5);
             
-            this.add.text(x / 2 - 250, yPos + 20, upgrade.description, {
+            this.add.text(rightSideX - 200, yPos + 20, upgrade.description, {
                 font: '14px Arial',
                 fill: '#cccccc'
             }).setOrigin(0, 0.5);
@@ -156,33 +193,56 @@ class UpgradeScene extends Phaser.Scene {
             const currentLevel = this.game.gameState.upgrades[upgrade.key];
             const maxLevel = 5;
             
-            this.add.text(x / 2 + 50, yPos, `Level: ${currentLevel}/${maxLevel}`, {
+            this.add.text(rightSideX - 10, yPos, `Level: ${currentLevel}/${maxLevel}`, {
                 font: '16px Arial',
                 fill: '#ffffff'
             }).setOrigin(0, 0.5);
             
             // Level bar
-            this.add.rectangle(x / 2 + 150, yPos, 100, 15, 0x333333).setOrigin(0, 0.5);
+            const progressBarWidth = 100;
+            const progressBarX = rightSideX + 90;
+            this.add.rectangle(progressBarX, yPos, progressBarWidth, 15, 0x333333).setOrigin(0, 0.5);
             
             if (currentLevel > 0) {
                 this.add.rectangle(
-                    x / 2 + 150, yPos,
-                    100 * (currentLevel / maxLevel), 15,
+                    progressBarX, yPos,
+                    progressBarWidth * (currentLevel / maxLevel), 15,
                     0x3498db
                 ).setOrigin(0, 0.5);
             }
             
-            // Upgrade button (disabled if max level)
+            // Upgrade button (disabled if max level) - positioned below the progress bar
             if (currentLevel < maxLevel) {
-                this.createButton(
-                    x / 2 + 300,
-                    yPos,
+                // Create a button with the same width as the progress bar
+                const button = this.add.rectangle(
+                    progressBarX + progressBarWidth/2, // Center the button under the progress bar
+                    yPos + 25, // Position below the progress bar
+                    progressBarWidth, // Same width as progress bar
+                    30, // Slightly shorter height
+                    0x27ae60,
+                    1
+                ).setInteractive();
+                
+                const buttonText = this.add.text(
+                    progressBarX + progressBarWidth/2,
+                    yPos + 25,
                     'Upgrade',
-                    () => this.upgradeItem(upgrade.key),
-                    currentLevel < maxLevel ? 0x27ae60 : 0x7f8c8d
-                );
+                    {
+                        font: '16px Arial',
+                        fill: '#ffffff'
+                    }
+                ).setOrigin(0.5);
+                
+                // Add hover and click effects
+                button.on('pointerover', () => button.setFillStyle(0x2ecc71));
+                button.on('pointerout', () => button.setFillStyle(0x27ae60));
+                button.on('pointerdown', () => button.setFillStyle(0x219653));
+                button.on('pointerup', () => {
+                    button.setFillStyle(0x2ecc71);
+                    this.upgradeItem(upgrade.key);
+                });
             } else {
-                this.add.text(x / 2 + 300, yPos, 'MAXED', {
+                this.add.text(progressBarX + progressBarWidth/2, yPos + 25, 'MAXED', {
                     font: 'bold 16px Arial',
                     fill: '#f1c40f'
                 }).setOrigin(0.5);
