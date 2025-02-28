@@ -8,7 +8,7 @@ class Track {
         this.city = city;
         this.tileSize = 32;
         this.roadWidth = 3; // Number of tiles
-        this.trackLength = 100; // Length of track in tiles
+        this.trackLength = 150; // Length of track in tiles (increased by 1.5x)
         
         // Track properties based on city
         this.cityProperties = {
@@ -167,7 +167,7 @@ class Track {
     
     generateDecorations(buildingDensity) {
         // Add decorations around the track
-        const maxDistance = 10; // Maximum distance from road
+        const maxDistance = 15; // Maximum distance from road (increased by 1.5x)
         
         // Create a grid to track occupied positions
         const occupiedPositions = new Set();
@@ -376,7 +376,7 @@ class Track {
         // Render grass tiles as background
         const maxX = this.getMaxX();
         const maxY = this.getMaxY();
-        const buffer = 10; // Extra grass around track
+        const buffer = 15; // Extra grass around track (increased by 1.5x)
         
         for (let x = -buffer; x <= maxX + buffer; x++) {
             for (let y = -buffer; y <= maxY + buffer; y++) {
