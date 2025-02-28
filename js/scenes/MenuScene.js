@@ -18,13 +18,13 @@ class MenuScene extends Phaser.Scene {
             font: 'bold 48px Arial',
             fill: '#ffffff'
         }).setOrigin(0.5);
-        this.add.text(width / 2, height / 4 + 60, 'Romanian Racing Adventure', {
+        this.add.text(width / 2, height / 4 + 60, 'Aventură de Curse în România', {
             font: '24px Arial',
             fill: '#ffffff'
         }).setOrigin(0.5);
         
         // Game description
-        this.add.text(width / 2, height / 4 + 110, 'Race through Romanian cities, avoid obstacles,\ndefeat enemies, and complete missions in this\naction-packed driving adventure!', {
+        this.add.text(width / 2, height / 4 + 110, 'Condu prin orașele României, evită obstacolele,\nînvinge inamicii și completează misiunile în această\naventură plină de acțiune!', {
             font: '16px Arial',
             fill: '#ffffff',
             align: 'center'
@@ -40,7 +40,7 @@ class MenuScene extends Phaser.Scene {
             this.createButton(
                 width / 2,
                 height - 100,
-                'Continue Game',
+                'Continuă Jocul',
                 () => {
                     // Load the saved game state
                     this.game.gameState = savedGame;
@@ -61,7 +61,7 @@ class MenuScene extends Phaser.Scene {
             this.createButton(
                 width / 2,
                 height - 40,
-                'New Game',
+                'Joc Nou',
                 () => {
                     // Reset game state
                     GameStorage.clearSave();
@@ -74,7 +74,7 @@ class MenuScene extends Phaser.Scene {
             this.createButton(
                 width / 2,
                 height - 70,
-                'Start Game',
+                'Începe Jocul',
                 () => {
                     this.resetGameState();
                     this.startGame('Bucharest');
@@ -94,7 +94,7 @@ class MenuScene extends Phaser.Scene {
     
     createCitySelection(width, height) {
         // City selection title
-        this.add.text(width / 2, height / 2 - 40, 'Select City:', {
+        this.add.text(width / 2, height / 2 - 40, 'Selectează Orașul:', {
             font: '24px Arial',
             fill: '#ffffff'
         }).setOrigin(0.5);
@@ -131,7 +131,7 @@ class MenuScene extends Phaser.Scene {
                         this.startGame(city);
                     } else {
                         // Show "complete previous city" message
-                        this.showMessage(`Complete ${cities[index - 1]} first!`);
+                        this.showMessage(`Completează ${cities[index - 1]} mai întâi!`);
                     }
                 },
                 isLocked ? 0x555555 : buttonColor

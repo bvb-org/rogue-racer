@@ -472,7 +472,7 @@ class Player {
         
         // Create health text
         this.healthText = this.scene.add.text(
-            100, 30, 'Health', {
+            100, 30, 'Viață', {
                 font: '14px Arial',
                 fill: '#ffffff'
             }
@@ -487,7 +487,7 @@ class Player {
         
         // Create ammo text
         this.ammoText = this.scene.add.text(
-            100, 60, `Ammo: ${this.ammo}`, {
+            100, 60, `Muniție: ${this.ammo}`, {
                 font: '14px Arial',
                 fill: '#ffffff'
             }
@@ -507,7 +507,7 @@ class Player {
         
         // Create shockwave text
         this.shockwaveText = this.scene.add.text(
-            100, 90, 'Shockwave [C]', {
+            100, 90, 'Undă de Șoc [C]', {
                 font: '14px Arial',
                 fill: '#ffffff'
             }
@@ -529,7 +529,7 @@ class Player {
         }
         
         // Update ammo text
-        this.ammoText.setText(`Ammo: ${this.ammo}`);
+        this.ammoText.setText(`Muniție: ${this.ammo}`);
         
         // Update shockwave display
         if (this.shockwaveUnlocked) {
@@ -551,11 +551,11 @@ class Player {
             // Update color based on cooldown status
             if (cooldownPercent >= 1) {
                 this.shockwaveBar.fillColor = 0x00ffff; // Cyan when ready
-                this.shockwaveText.setText('Shockwave [C] - READY');
+                this.shockwaveText.setText('Undă de Șoc [C] - GATA');
             } else {
                 this.shockwaveBar.fillColor = 0x3498db; // Blue when charging
                 const remainingSeconds = Math.ceil((this.shockwaveCooldown - timeSinceLastUse) / 1000);
-                this.shockwaveText.setText(`Shockwave [C] - ${remainingSeconds}s`);
+                this.shockwaveText.setText(`Undă de Șoc [C] - ${remainingSeconds}s`);
             }
         }
     }

@@ -12,7 +12,7 @@ class BootScene extends Phaser.Scene {
         const loadingText = this.add.text(
             this.cameras.main.width / 2,
             this.cameras.main.height / 2,
-            'Loading...',
+            'Se încarcă...',
             {
                 font: '20px Arial',
                 fill: '#ffffff'

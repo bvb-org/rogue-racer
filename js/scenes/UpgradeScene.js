@@ -35,7 +35,7 @@ class UpgradeScene extends Phaser.Scene {
         }
         
         // Title with a decorative underline
-        this.add.text(width / 2, 40, 'UPGRADE YOUR VEHICLE', {
+        this.add.text(width / 2, 40, 'ÎMBUNĂTĂȚEȘTE VEHICULUL', {
             font: 'bold 32px Arial',
             fill: '#ffffff'
         }).setOrigin(0.5);
@@ -44,13 +44,13 @@ class UpgradeScene extends Phaser.Scene {
         const underline = this.add.rectangle(width / 2, 65, 400, 3, 0x3498db).setOrigin(0.5);
         
         // Score display
-        this.add.text(width / 2, 90, `Mission Score: ${this.score}`, {
+        this.add.text(width / 2, 90, `Scor Misiune: ${this.score}`, {
             font: '24px Arial',
             fill: '#ffffff'
         }).setOrigin(0.5);
         
         // Available upgrade points display with highlight
-        const pointsText = `Available Upgrade Points: ${this.game.gameState.availableUpgradePoints}`;
+        const pointsText = `Puncte Disponibile: ${this.game.gameState.availableUpgradePoints}`;
         const pointsDisplay = this.add.text(width / 2, 120, pointsText, {
             font: 'bold 20px Arial',
             fill: '#f1c40f'
@@ -86,7 +86,7 @@ class UpgradeScene extends Phaser.Scene {
         this.createButton(
             width / 2,
             height - 50,
-            'Continue',
+            'Continuă',
             () => {
                 // Save game state
                 GameStorage.saveGame(this.game.gameState);
@@ -110,7 +110,7 @@ class UpgradeScene extends Phaser.Scene {
         // Create city completion status - positioned on the left side
         const leftSideX = x * 0.25; // 1/4 of screen width
         
-        this.add.text(leftSideX, y, 'City Status:', {
+        this.add.text(leftSideX, y, 'Starea Orașelor:', {
             font: 'bold 22px Arial',
             fill: '#ffffff'
         }).setOrigin(0.5);
@@ -128,7 +128,7 @@ class UpgradeScene extends Phaser.Scene {
             // Check if mission exists before accessing its completed property
             const completed = this.game.gameState.missions[city] ? this.game.gameState.missions[city].completed : false;
             const color = completed ? '#2ecc71' : '#e74c3c';
-            const status = completed ? 'Completed' : 'Incomplete';
+            const status = completed ? 'Completat' : 'Necompletat';
             
             // Increased the y offset to move cities lower (from y + 20 to y + 45)
             this.add.text(leftSideX, y + 45 + (index) * spacing, `${city}: ${status}`, {
@@ -143,7 +143,7 @@ class UpgradeScene extends Phaser.Scene {
         );
         
         if (allCompleted) {
-            this.add.text(leftSideX, y + 45 + (cities.length) * spacing, 'All missions completed!', {
+            this.add.text(leftSideX, y + 45 + (cities.length) * spacing, 'Toate misiunile completate!', {
                 font: 'bold 20px Arial',
                 fill: '#f1c40f'
             }).setOrigin(0.5);
@@ -154,16 +154,16 @@ class UpgradeScene extends Phaser.Scene {
         // Create upgrade options - positioned on the right side
         const rightSideX = x * 0.75; // 3/4 of screen width
         
-        this.add.text(rightSideX, y, 'Upgrade Your Vehicle:', {
+        this.add.text(rightSideX, y, 'Îmbunătățește Vehiculul Tău:', {
             font: 'bold 22px Arial',
             fill: '#ffffff'
         }).setOrigin(0.5);
         
         const upgrades = [
-            { key: 'speed', name: 'Speed', description: 'Increases vehicle speed' },
-            { key: 'fireRate', name: 'Fire Rate', description: 'Increases weapon fire rate' },
-            { key: 'ammo', name: 'Ammo Capacity', description: 'Increases starting ammo' },
-            { key: 'health', name: 'Health', description: 'Increases vehicle health' }
+            { key: 'speed', name: 'Viteză', description: 'Crește viteza vehiculului' },
+            { key: 'fireRate', name: 'Rată de Tragere', description: 'Crește rata de tragere a armei' },
+            { key: 'ammo', name: 'Capacitate Muniție', description: 'Crește muniția inițială' },
+            { key: 'health', name: 'Viață', description: 'Crește viața vehiculului' }
         ];
         
         const spacing = 85; // Increased spacing between upgrade options
@@ -193,7 +193,7 @@ class UpgradeScene extends Phaser.Scene {
             const currentLevel = this.game.gameState.upgrades[upgrade.key];
             const maxLevel = 5;
             
-            this.add.text(rightSideX - 10, yPos, `Level: ${currentLevel}/${maxLevel}`, {
+            this.add.text(rightSideX - 10, yPos, `Nivel: ${currentLevel}/${maxLevel}`, {
                 font: '16px Arial',
                 fill: '#ffffff'
             }).setOrigin(0, 0.5);
@@ -242,7 +242,7 @@ class UpgradeScene extends Phaser.Scene {
                     this.upgradeItem(upgrade.key);
                 });
             } else {
-                this.add.text(progressBarX + progressBarWidth/2, yPos + 25, 'MAXED', {
+                this.add.text(progressBarX + progressBarWidth/2, yPos + 25, 'MAXIM', {
                     font: 'bold 16px Arial',
                     fill: '#f1c40f'
                 }).setOrigin(0.5);
@@ -284,13 +284,13 @@ class UpgradeScene extends Phaser.Scene {
         
         // Check if already at max level
         if (currentLevel >= maxLevel) {
-            this.showMessage('Already at maximum level!');
+            this.showMessage('Deja la nivel maxim!');
             return;
         }
         
         // Check if player has available upgrade points
         if (this.game.gameState.availableUpgradePoints <= 0) {
-            this.showMessage('No upgrade points available!');
+            this.showMessage('Nu mai sunt disponibile!');
             return;
         }
         
@@ -318,7 +318,15 @@ class UpgradeScene extends Phaser.Scene {
         this.sound.play('pickup');
         
         // Show upgrade message
-        this.showMessage(`${key} upgraded!`);
+        // Translate upgrade key names
+        const keyTranslations = {
+            'speed': 'Viteză',
+            'fireRate': 'Rată de Tragere',
+            'ammo': 'Muniție',
+            'health': 'Viață'
+        };
+        const translatedKey = keyTranslations[key] || key;
+        this.showMessage(`${translatedKey} îmbunătățit!`);
         
         // Save game
         GameStorage.saveGame(this.game.gameState);
@@ -370,7 +378,7 @@ class UpgradeScene extends Phaser.Scene {
         container.add(messageBg);
         
         // Create title
-        const title = this.add.text(0, -120, 'NEW ABILITY UNLOCKED!', {
+        const title = this.add.text(0, -120, 'ABILITATE NOUĂ DEBLOCATĂ!', {
             font: 'bold 28px Arial',
             fill: '#00ffff'
         }).setOrigin(0.5);
@@ -392,7 +400,7 @@ class UpgradeScene extends Phaser.Scene {
         
         // Create description
         const description = this.add.text(0, 30,
-            "SHOCKWAVE\n\nDestroy all enemies around you with a powerful shockwave.\n\nPress 'C' key to activate.\n\nCooldown: 10 seconds", {
+            "UNDĂ DE ȘOC\n\nDistruge toți inamicii din jurul tău cu o undă de șoc puternică.\n\nApasă tasta 'C' pentru a activa.\n\nTimpul de reîncărcare: 10 secunde", {
             font: '18px Arial',
             fill: '#ffffff',
             align: 'center'
@@ -404,7 +412,7 @@ class UpgradeScene extends Phaser.Scene {
             .setInteractive();
         container.add(button);
         
-        const buttonText = this.add.text(0, 120, 'CONTINUE', {
+        const buttonText = this.add.text(0, 120, 'CONTINUĂ', {
             font: 'bold 18px Arial',
             fill: '#000000'
         }).setOrigin(0.5);

@@ -111,7 +111,7 @@ class GameScene extends Phaser.Scene {
         // Create score text
         this.scoreText = this.add.text(
             this.cameras.main.width - 20, 30,
-            `Score: ${this.score}`,
+            `Scor: ${this.score}`,
             {
                 font: '18px Arial',
                 fill: '#ffffff'
@@ -121,7 +121,7 @@ class GameScene extends Phaser.Scene {
         // Create city text
         this.cityText = this.add.text(
             this.cameras.main.width / 2, 30,
-            `City: ${this.currentCity}`,
+            `Oraș: ${this.currentCity}`,
             {
                 font: '18px Arial',
                 fill: '#ffffff'
@@ -131,7 +131,7 @@ class GameScene extends Phaser.Scene {
         // Create mission text
         this.missionText = this.add.text(
             this.cameras.main.width / 2, 60,
-            'Mission: Reach the finish line',
+            'Misiune: Ajunge la linia de finish',
             {
                 font: '16px Arial',
                 fill: '#ffffff'
@@ -141,7 +141,7 @@ class GameScene extends Phaser.Scene {
     
     updateUI() {
         // Update score text
-        this.scoreText.setText(`Score: ${this.score}`);
+        this.scoreText.setText(`Scor: ${this.score}`);
     }
     
     startEnemySpawning() {
@@ -272,7 +272,8 @@ class GameScene extends Phaser.Scene {
         this.addScore(25);
         
         // Show pickup message
-        this.showMessage(`+${pickup.pickupValue} ${pickup.pickupType}!`);
+        const pickupTypeRo = pickup.pickupType === 'ammo' ? 'muniție' : 'viață';
+        this.showMessage(`+${pickup.pickupValue} ${pickupTypeRo}!`);
         
         // Destroy pickup
         pickup.destroy();
@@ -346,12 +347,12 @@ class GameScene extends Phaser.Scene {
         GameStorage.saveGame(this.game.gameState);
         
         // Show mission complete message
-        this.showMessage('Mission Complete!', 3000);
+        this.showMessage('Misiune Completă!', 3000);
         
         // Add bonus score
         const bonus = 1000;
         this.addScore(bonus);
-        this.showMessage(`Bonus: +${bonus} points`, 3000);
+        this.showMessage(`Bonus: +${bonus} puncte`, 3000);
         
         // Check if this is the first city completed (Bucharest)
         const isFirstCityCompleted = this.currentCity === 'Bucharest';
@@ -406,14 +407,14 @@ class GameScene extends Phaser.Scene {
             .setDepth(202);
         
         // Add title
-        const title = this.add.text(width/2, height/2 - 120, 'CONTROLS', {
+        const title = this.add.text(width/2, height/2 - 120, 'CONTROALE', {
             font: 'bold 24px Arial',
             fill: '#ffffff'
         }).setScrollFactor(0).setOrigin(0.5).setDepth(202);
         
         // Add controls text
         const controlsText = this.add.text(width/2, height/2 - 50,
-            '↑  Accelerate\n↓  Brake/Reverse\n←  Turn Left\n→  Turn Right\nSPACE - Shoot', {
+            '↑  Accelerează\n↓  Frânează/Marșarier\n←  Virează Stânga\n→  Virează Dreapta\nSPACE - Trage', {
             font: '18px Arial',
             fill: '#ffffff',
             align: 'center'
@@ -462,7 +463,7 @@ class GameScene extends Phaser.Scene {
             this.startEnemySpawning();
             
             // Show a "Go!" message
-            this.showMessage('GO!', 1500);
+            this.showMessage('START!', 1500);
         });
     }
     
@@ -476,7 +477,7 @@ class GameScene extends Phaser.Scene {
         this.stopEnemySpawning();
         
         // Show game over message
-        this.showMessage('Game Over', 3000);
+        this.showMessage('Joc Terminat', 3000);
         
         // Transition to menu scene after delay
         this.time.delayedCall(3000, () => {
