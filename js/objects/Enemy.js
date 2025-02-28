@@ -30,8 +30,10 @@ class Enemy {
     }
     
     setupDrone() {
-        // Drones hover and move randomly
+        // Drones hover and move randomly until player approaches
         this.sprite.setScale(0.8);
+        this.detectionRadius = 300; // How close player needs to be for drone to attack
+        this.isAttacking = false;
         
         // Add hover animation
         this.scene.tweens.add({
@@ -43,15 +45,18 @@ class Enemy {
             ease: 'Sine.easeInOut'
         });
         
-        // Set random movement pattern
+        // Set idle movement pattern (slower and less frequent changes)
         this.movementTimer = this.scene.time.addEvent({
-            delay: 2000,
+            delay: 3000, // Longer delay between direction changes
             callback: this.changeDirection,
             callbackScope: this,
             loop: true
         });
         
-        // Initial direction
+        // Initial direction with slower speed
+        this.idleSpeed = 50; // Slower speed when not attacking
+        this.attackSpeed = 150; // Faster speed when attacking
+        this.speed = this.idleSpeed;
         this.changeDirection();
     }
     
@@ -98,12 +103,6 @@ class Enemy {
     update() {
         if (!this.active) return;
         
-        if (this.type === 'enemy-car') {
-            // Update car angle to chase player
-            this.updateAngle();
-        }
-        
-        // Check if enemy is too far from player
         if (this.scene.player && this.scene.player.sprite.active) {
             const distance = Phaser.Math.Distance.Between(
                 this.sprite.x, this.sprite.y,
@@ -113,6 +112,51 @@ class Enemy {
             // Despawn if too far (outside camera view)
             if (distance > 1500) {
                 this.destroy();
+                return;
+            }
+            
+            if (this.type === 'enemy-car') {
+                // Update car angle to chase player
+                this.updateAngle();
+            } else if (this.type === 'drone') {
+                // Drone behavior: attack only when player is within detection radius
+                if (distance <= this.detectionRadius && !this.isAttacking) {
+                    // Switch to attack mode
+                    this.isAttacking = true;
+                    this.speed = this.attackSpeed;
+                    
+                    // Clear the random movement timer
+                    if (this.movementTimer) {
+                        this.movementTimer.remove();
+                        this.movementTimer = null;
+                    }
+                    
+                    // Add visual indicator that drone is in attack mode
+                    this.sprite.setTint(0xff0000);
+                } else if (distance > this.detectionRadius && this.isAttacking) {
+                    // Switch back to idle mode
+                    this.isAttacking = false;
+                    this.speed = this.idleSpeed;
+                    
+                    // Restore random movement if timer was removed
+                    if (!this.movementTimer) {
+                        this.movementTimer = this.scene.time.addEvent({
+                            delay: 3000,
+                            callback: this.changeDirection,
+                            callbackScope: this,
+                            loop: true
+                        });
+                        this.changeDirection();
+                    }
+                    
+                    // Remove attack tint
+                    this.sprite.clearTint();
+                }
+                
+                // Update drone movement based on current mode
+                if (this.isAttacking) {
+                    this.updateAngle(); // Chase player when attacking
+                }
             }
         }
     }

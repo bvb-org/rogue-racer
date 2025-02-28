@@ -128,14 +128,18 @@ class Track {
     
     generateObstacles(density) {
         // Add obstacles along the track
-        for (let i = 10; i < this.trackLength - 5; i++) {
-            if (Math.random() < density) {
+        // Reduce density by 1/3 to match the spawning reduction
+        const reducedDensity = density / 3;
+        
+        for (let i = 10; i < this.trackLength - 5; i += 3) { // Skip more segments to reduce count
+            if (Math.random() < reducedDensity) {
                 // Get current road segment
                 const segment = this.roadPath[i];
                 
                 // Determine obstacle position (left or right of road)
                 const side = Math.random() > 0.5 ? 1 : -1;
-                const offset = Math.floor(Math.random() * 2) + 1;
+                // Increase offset to place drones near but not on the road
+                const offset = Math.floor(Math.random() * 2) + 2; // Now 2-3 tiles away instead of 1-2
                 
                 // Calculate obstacle position
                 let obstacleX, obstacleY;
@@ -155,7 +159,7 @@ class Track {
                     obstacleY = segment.y;
                 }
                 
-                // Add obstacle - only use drones on the road, trees will be decorations only
+                // Add obstacle - only use drones near the road, not on it
                 this.obstacles.push({
                     x: obstacleX,
                     y: obstacleY,

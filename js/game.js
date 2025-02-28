@@ -30,8 +30,8 @@ const gameState = {
     playerStats: {
         speed: 1,
         fireRate: 1,
-        ammo: 50,
-        health: 100
+        ammo: 25,
+        health: 50
     },
     missions: {
         Bucharest: { completed: false },

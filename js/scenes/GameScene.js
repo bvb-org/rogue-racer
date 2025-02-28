@@ -138,20 +138,20 @@ class GameScene extends Phaser.Scene {
         
         switch (this.currentCity) {
             case 'Bucharest':
-                carSpawnRate = 5000;
-                droneSpawnRate = 7000;
+                carSpawnRate = 2500; // Halved from 5000 (double the cars)
+                droneSpawnRate = 21000; // Tripled from 7000 (1/3 of original drones)
                 break;
             case 'Brașov':
-                carSpawnRate = 4000;
-                droneSpawnRate = 6000;
+                carSpawnRate = 2000; // Halved from 4000 (double the cars)
+                droneSpawnRate = 18000; // Tripled from 6000 (1/3 of original drones)
                 break;
             case 'Cluj-Napoca':
-                carSpawnRate = 3000;
-                droneSpawnRate = 5000;
+                carSpawnRate = 1500; // Halved from 3000 (double the cars)
+                droneSpawnRate = 15000; // Tripled from 5000 (1/3 of original drones)
                 break;
             default:
-                carSpawnRate = 5000;
-                droneSpawnRate = 7000;
+                carSpawnRate = 2500; // Halved from 5000 (double the cars)
+                droneSpawnRate = 21000; // Tripled from 7000 (1/3 of original drones)
         }
         
         // Start car spawning
