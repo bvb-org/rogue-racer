@@ -51,11 +51,12 @@ class UpgradeScene extends Phaser.Scene {
         );
         
         // Play menu music
-        if (!this.sound.get('menu-music')) {
-            this.sound.add('menu-music', { loop: true, volume: 0.5 });
+        let menuMusic = this.sound.get('menu-music');
+        if (!menuMusic) {
+            menuMusic = this.sound.add('menu-music', { loop: true, volume: 0.5 });
         }
-        if (!this.sound.isPlaying('menu-music')) {
-            this.sound.play('menu-music');
+        if (!menuMusic.isPlaying) {
+            menuMusic.play();
         }
     }
     

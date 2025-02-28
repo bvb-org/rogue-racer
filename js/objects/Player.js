@@ -31,7 +31,7 @@ class Player {
         // Create engine sound
         this.engineSound = scene.sound.add('engine', {
             loop: true,
-            volume: 0.5
+            volume: 0.05
         });
         
         // Create shoot sound
