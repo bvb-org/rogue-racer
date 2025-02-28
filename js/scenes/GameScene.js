@@ -402,7 +402,7 @@ class GameScene extends Phaser.Scene {
         
         // Add controls text
         const controlsText = this.add.text(width/2, height/2 - 50,
-            'W - Accelerate\nS - Brake/Reverse\nA - Turn Left\nD - Turn Right\nSPACE - Shoot', {
+            '↑  Accelerate\n↓  Brake/Reverse\n←  Turn Left\n→  Turn Right\nSPACE - Shoot', {
             font: '18px Arial',
             fill: '#ffffff',
             align: 'center'
