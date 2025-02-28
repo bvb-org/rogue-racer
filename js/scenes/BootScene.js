@@ -113,7 +113,7 @@ class BootScene extends Phaser.Scene {
         };
 
         // Create placeholder images
-        createPlaceholder('player-car', 40, 70, 0x3498db);
+        createPlaceholder('player-car', 55, 55, 0x3498db);
         createPlaceholder('enemy-car', 40, 70, 0xe74c3c);
         createPlaceholder('drone', 30, 30, 0x95a5a6);
         createPlaceholder('bullet', 5, 10, 0xf1c40f);
