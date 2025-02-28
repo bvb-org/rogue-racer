@@ -13,7 +13,8 @@ const GameStorage = {
                 currentCity: gameState.currentCity,
                 playerStats: gameState.playerStats,
                 missions: gameState.missions,
-                upgrades: gameState.upgrades
+                upgrades: gameState.upgrades,
+                availableUpgradePoints: gameState.availableUpgradePoints
             };
             localStorage.setItem('rogueRacerSave', JSON.stringify(gameData));
             console.log('Game saved successfully');

@@ -310,6 +310,9 @@ class GameScene extends Phaser.Scene {
         // Mark mission as completed
         this.game.gameState.missions[this.currentCity].completed = true;
         
+        // Reset available upgrade points
+        this.game.gameState.availableUpgradePoints = 2;
+        
         // Save game
         GameStorage.saveGame(this.game.gameState);
         

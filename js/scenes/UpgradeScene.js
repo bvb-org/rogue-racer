@@ -10,6 +10,11 @@ class UpgradeScene extends Phaser.Scene {
     init(data) {
         // Get score from previous scene
         this.score = data.score || 0;
+        
+        // Set available upgrade points if not already set
+        if (this.game.gameState.availableUpgradePoints === undefined) {
+            this.game.gameState.availableUpgradePoints = 2;
+        }
     }
 
     create() {
@@ -30,16 +35,23 @@ class UpgradeScene extends Phaser.Scene {
             fill: '#ffffff'
         }).setOrigin(0.5);
         
+        // Available upgrade points display
+        this.add.text(width / 2, 130, `Available Upgrade Points: ${this.game.gameState.availableUpgradePoints}`, {
+            font: '20px Arial',
+            fill: '#f1c40f'
+        }).setOrigin(0.5);
+        
         // City completion status
-        this.createCityStatus(width, 150);
+        this.createCityStatus(width, 170);
         
         // Upgrade options
-        this.createUpgradeOptions(width, 250);
+        this.createUpgradeOptions(width, 270);
         
-        // Continue button
+        // Continue button - position it at a fixed distance from the bottom of the screen
+        // to ensure it's always visible
         this.createButton(
             width / 2,
-            height - 70,
+            height - 50,
             'Continue',
             () => {
                 // Save game state
@@ -201,8 +213,15 @@ class UpgradeScene extends Phaser.Scene {
             return;
         }
         
-        // Increase level
+        // Check if player has available upgrade points
+        if (this.game.gameState.availableUpgradePoints <= 0) {
+            this.showMessage('No upgrade points available!');
+            return;
+        }
+        
+        // Increase level and decrease available points
         this.game.gameState.upgrades[key]++;
+        this.game.gameState.availableUpgradePoints--;
         
         // Update player stats based on upgrade
         switch (key) {

@@ -39,7 +39,8 @@ const gameState = {
         fireRate: 0,
         ammo: 0,
         health: 0
-    }
+    },
+    availableUpgradePoints: 2 // Initial upgrade points
 };
 
 // Initialize the game when the window loads
