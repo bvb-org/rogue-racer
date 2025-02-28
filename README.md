@@ -1,53 +1,76 @@
-# Rogue Racer
+# 🏎️ Rogue Racer
 
-A 2D top-down racing game set in Romania, built with Phaser.js.
+A 2D top-down racing game set in Romania 🇷🇴, built with Phaser.js.
 
-## Game Description
+## 🎮 Game Description
 
-Rogue Racer is a fast-paced racing game where you drive through procedurally generated tracks in three Romanian cities: Bucharest, Brașov, and Cluj-Napoca. Each city has a unique track reflecting its traits (urban for Bucharest, mountainous for Brașov, mixed for Cluj-Napoca).
+Rogue Racer is a fast-paced racing game where you drive through procedurally generated tracks in six Romanian cities: Bucharest, Brașov, Cluj-Napoca, Timisoara, Iasi, and Vaslui. Each city has a unique track reflecting its traits:
 
-### Features
+- **Bucharest** 🏙️: Urban setting with straighter roads, high building density, and Parliament landmark
+- **Brașov** ⛰️: Mountainous terrain with curvy roads and the Black Church landmark
+- **Cluj-Napoca** 🌆: Mixed setting with medium curviness and complex road networks
+- **Timisoara** 🏛️: Cultural city with slightly curvier roads than Bucharest
+- **Iasi** 🏫: Historical city with more curves and higher intersection density
+- **Vaslui** 🛣️: Challenging rural roads with the most curves and highest obstacle density
 
-- **Three Romanian Cities**: Race through Bucharest, Brașov, and Cluj-Napoca
-- **Procedurally Generated Tracks**: Each city has a unique track layout
-- **Romanian-themed Elements**: Billboards with Romanian text, simplified landmarks
-- **Combat System**: Shoot or avoid NPC drones and rival racers
-- **Upgrade System**: Improve your vehicle's speed, fire rate, ammo capacity, and health
-- **Progress Saving**: Game progress is saved in local storage
+The difficulty increases as you progress through the cities, with more enemies and obstacles to overcome.
 
-## How to Play
+### ✨ Features
 
-### Controls
+- **Six Romanian Cities** 🇷🇴: Race through Bucharest, Brașov, Cluj-Napoca, Timisoara, Iasi, and Vaslui
+- **Procedurally Generated Tracks** 🗺️: Each city has a unique track layout
+- **Romanian-themed Elements** 🏛️: Billboards with Romanian text, simplified landmarks
+- **Combat System** 💥: Shoot or avoid NPC drones and rival racers
+- **Upgrade System** ⚡: Improve your vehicle's speed, fire rate, ammo capacity, and health
+- **Special Abilities** 🌀: Unlock the Shockwave ability after completing Bucharest, allowing you to destroy all nearby enemies
+- **Terrain Effects** 🌱: Different driving experiences on roads vs. grass (slower on grass)
+- **Progress Saving** 💾: Game progress is saved in local storage
 
-- **Arrow Keys**: Drive your vehicle
+## 🎯 How to Play
+
+### 🎛️ Controls
+
+- **Arrow Keys** ⬆️⬇️⬅️➡️: Drive your vehicle
   - Up: Accelerate
   - Down: Reverse
   - Left/Right: Turn
-- **Space**: Shoot
+- **Space** 🔫: Shoot
+- **C** 💫: Activate Shockwave (after unlocking)
 
-### Gameplay
+### 🏁 Gameplay
 
-1. Select a city to race in
-2. Complete the mission by reaching the finish line
-3. Avoid or destroy enemy vehicles and drones
-4. Collect pickups for health and ammo
-5. Upgrade your vehicle between missions
+1. Select a city to race in 🏙️
+2. Complete the mission by reaching the finish line 🏁
+3. Avoid or destroy enemy vehicles and drones 💥
+4. Collect pickups for health and ammo 🔋
+5. Upgrade your vehicle between missions 🔧
 
-## Running the Game
+### 🔧 Upgrade System
 
-### Local Development
+After completing each mission, you'll earn upgrade points that can be spent on:
+
+- **Speed** ⚡: Increases your vehicle's maximum speed
+- **Fire Rate** 🔥: Reduces the cooldown between shots
+- **Ammo Capacity** 🔫: Increases your starting ammunition
+- **Health** ❤️: Increases your vehicle's durability
+
+Each stat can be upgraded up to 5 levels. Strategic upgrades are essential for tackling the more challenging cities.
+
+## 🚀 Running the Game
+
+### 💻 Local Development
 
 1. Clone the repository
 2. Open `index.html` in a web browser
 
-### Docker Deployment (Raspberry Pi)
+### 🐳 Docker Deployment (Raspberry Pi)
 
 The game includes Docker configuration for easy deployment on a Raspberry Pi or any other system running Docker.
 
 #### Prerequisites
 
-- Docker and Docker Compose installed on your Raspberry Pi
-- Git (optional)
+- Docker and Docker Compose installed on your Raspberry Pi 🐳
+- Git (optional) 📦
 
 #### Deployment Steps
 
@@ -62,7 +85,7 @@ The game includes Docker configuration for easy deployment on a Raspberry Pi or 
    docker-compose up -d
    ```
 
-3. Access the game by navigating to `http://your-raspberry-pi-ip:8080` in a web browser
+3. Access the game by navigating to `http://localhost:8080` in a web browser 🌐
 
 #### Stopping the Game Server
 
@@ -70,9 +93,9 @@ The game includes Docker configuration for easy deployment on a Raspberry Pi or 
 docker-compose down
 ```
 
-## Development
+## 👨‍💻 Development
 
-### Project Structure
+### 📁 Project Structure
 
 - `index.html`: Main HTML file
 - `js/`: JavaScript files
@@ -83,11 +106,11 @@ docker-compose down
 - `assets/`: Game assets (images, sounds)
 - `Dockerfile` & `docker-compose.yml`: Docker configuration
 
-## Credits
+## 🙏 Credits
 
-- Built with [Phaser 3](https://phaser.io/phaser3)
+- Built with [Phaser 3](https://phaser.io/) 🎮
 - Developed as a demonstration project
 
-## License
+## 📄 License
 
 This project is open source and available under the MIT License.
