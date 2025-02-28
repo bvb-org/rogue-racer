@@ -30,11 +30,21 @@ class Player {
             maxSize: 20
         });
         
-        // Create engine sound
+        // Create engine sound system
         this.engineSound = scene.sound.add('engine', {
             loop: true,
             volume: 0.05
         });
+        
+        // Engine sound variables
+        this.currentSpeed = 0;
+        this.targetSpeed = 0;
+        this.acceleration = 0;
+        this.currentGear = 0;
+        this.maxGears = 5;
+        this.gearShiftTime = 0;
+        this.isRevving = false;
+        this.revSoundTimer = null;
         
         // Create shoot sound
         this.shootSound = scene.sound.add('shoot', {
@@ -72,8 +82,106 @@ class Player {
         // Update bullets
         this.updateBullets();
         
+        // Update engine sound
+        this.updateEngineSound(time, delta);
+        
         // Update UI
         this.updateUI();
+    }
+    
+    updateEngineSound(time, delta) {
+        // Calculate actual speed from velocity
+        const velocity = Math.sqrt(Math.pow(this.sprite.body.velocity.x, 2) + Math.pow(this.sprite.body.velocity.y, 2));
+        this.currentSpeed = Phaser.Math.Linear(this.currentSpeed, velocity, 0.1);
+        
+        // Calculate acceleration
+        const prevAcceleration = this.acceleration;
+        this.acceleration = this.targetSpeed - this.currentSpeed;
+        
+        // Determine appropriate gear based on speed
+        const maxSpeed = this.baseSpeed;
+        const prevGear = this.currentGear;
+        
+        if (this.currentSpeed < maxSpeed * 0.1) {
+            this.currentGear = 0; // Idle
+        } else if (this.currentSpeed < maxSpeed * 0.3) {
+            this.currentGear = 1; // First gear
+        } else if (this.currentSpeed < maxSpeed * 0.5) {
+            this.currentGear = 2; // Second gear
+        } else if (this.currentSpeed < maxSpeed * 0.7) {
+            this.currentGear = 3; // Third gear
+        } else if (this.currentSpeed < maxSpeed * 0.9) {
+            this.currentGear = 4; // Fourth gear
+        } else {
+            this.currentGear = 5; // Fifth gear
+        }
+        
+        // Handle gear shifts
+        if (prevGear !== this.currentGear && time > this.gearShiftTime) {
+            // Gear shift sound effect
+            if (this.currentGear > prevGear) {
+                // Shifting up
+                this.engineSound.setRate(0.8);
+                this.scene.time.delayedCall(100, () => {
+                    this.engineSound.setRate(1.2);
+                });
+                this.scene.time.delayedCall(200, () => {
+                    // Reset to appropriate rate for new gear
+                    const newRate = 0.8 + (this.currentGear / this.maxGears) * 0.6;
+                    this.engineSound.setRate(newRate);
+                });
+            } else {
+                // Shifting down
+                this.engineSound.setRate(1.3);
+                this.scene.time.delayedCall(100, () => {
+                    this.engineSound.setRate(0.9);
+                });
+                this.scene.time.delayedCall(200, () => {
+                    // Reset to appropriate rate for new gear
+                    const newRate = 0.8 + (this.currentGear / this.maxGears) * 0.6;
+                    this.engineSound.setRate(newRate);
+                });
+            }
+            
+            // Set cooldown for gear shifts
+            this.gearShiftTime = time + 500;
+        }
+        
+        // Handle revving when accelerating hard
+        if (this.acceleration > 20 && !this.isRevving && time > this.gearShiftTime) {
+            this.isRevving = true;
+            
+            // Rev sound effect
+            const currentRate = this.engineSound.rate;
+            this.engineSound.setRate(currentRate + 0.3);
+            
+            // Reset after rev
+            this.revSoundTimer = this.scene.time.delayedCall(300, () => {
+                this.isRevving = false;
+                this.engineSound.setRate(0.8 + (this.currentGear / this.maxGears) * 0.6);
+            });
+        }
+        
+        // Adjust base engine sound based on terrain and speed
+        if (!this.isRevving && time > this.gearShiftTime) {
+            let baseRate;
+            
+            if (this.currentSpeed < 10) {
+                // Idle
+                baseRate = this.isOnGrass ? 0.7 : 0.8;
+            } else {
+                // Moving
+                const gearFactor = this.currentGear / this.maxGears;
+                baseRate = this.isOnGrass ?
+                    0.7 + gearFactor * 0.4 : // On grass
+                    0.8 + gearFactor * 0.6;  // On road
+            }
+            
+            // Smooth transition to new rate
+            const currentRate = this.engineSound.rate;
+            const newRate = Phaser.Math.Linear(currentRate, baseRate, 0.1);
+            this.engineSound.setRate(newRate);
+        }
     }
     
     handleMovement() {
@@ -105,9 +213,8 @@ class Player {
             
             this.sprite.setVelocity(vx, vy);
             
-            // Adjust engine sound pitch based on speed and terrain
-            const pitchRate = this.isOnGrass ? 0.9 : 1.2;
-            this.engineSound.setRate(pitchRate);
+            // Set target speed for acceleration calculation
+            this.targetSpeed = this.speed;
         } else if (this.cursors.down.isDown) {
             // Reverse
             const angle = Phaser.Math.DegToRad(this.sprite.angle - 90);
@@ -116,12 +223,11 @@ class Player {
             
             this.sprite.setVelocity(vx, vy);
             
-            // Adjust engine sound pitch based on speed and terrain
-            const pitchRate = this.isOnGrass ? 0.6 : 0.8;
-            this.engineSound.setRate(pitchRate);
+            // Set target speed for acceleration calculation (negative for reverse)
+            this.targetSpeed = -this.speed * 0.5;
         } else {
-            // Idle
-            this.engineSound.setRate(1.0);
+            // Idle - gradually slow down
+            this.targetSpeed = 0;
         }
     }
     
