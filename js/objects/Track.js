@@ -155,11 +155,11 @@ class Track {
                     obstacleY = segment.y;
                 }
                 
-                // Add obstacle
+                // Add obstacle - only use drones on the road, trees will be decorations only
                 this.obstacles.push({
                     x: obstacleX,
                     y: obstacleY,
-                    type: Math.random() > 0.7 ? 'drone' : 'tree'
+                    type: 'drone'
                 });
             }
         }
@@ -194,14 +194,15 @@ class Track {
                 // Skip if position is occupied
                 if (occupiedPositions.has(pos)) continue;
                 
-                // Skip if too close to road
+                // Skip if on or too close to road (trees should only be on grass)
                 if (this.isNearRoad(x, y, 2)) continue;
                 
                 // Skip if too far from road
                 if (!this.isNearRoad(x, y, maxDistance)) continue;
                 
                 // Add decoration based on probability
-                if (Math.random() < 0.1) {
+                // Increased probability for trees to compensate for removing them from obstacles
+                if (Math.random() < 0.15) {
                     const isBuilding = Math.random() < buildingDensity;
                     
                     this.decorations.push({
