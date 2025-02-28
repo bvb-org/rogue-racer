@@ -34,7 +34,7 @@ class GameScene extends Phaser.Scene {
         
         // Set up camera to follow player
         this.cameras.main.startFollow(this.player.sprite);
-        this.cameras.main.setZoom(0.8);
+        this.cameras.main.setZoom(0.85);
         
         // Set up collisions
         this.physics.add.collider(this.player.sprite, trackObjects.obstacles, this.handlePlayerObstacleCollision, null, this);
