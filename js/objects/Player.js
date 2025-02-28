@@ -24,6 +24,11 @@ class Player {
         this.invulnerableTime = 1000; // ms
         this.isOnGrass = false; // Flag to track if player is on grass
         
+        // Acceleration properties for gradual speed changes
+        this.accelerationFactor = 0.03; // Adjust this to control acceleration speed (lower = slower)
+        this.currentVelocityX = 0;
+        this.currentVelocityY = 0;
+        
         // Create bullets group
         this.bullets = scene.physics.add.group({
             defaultKey: 'bullet',
@@ -33,7 +38,7 @@ class Player {
         // Create engine sound system
         this.engineSound = scene.sound.add('engine', {
             loop: true,
-            volume: 0.05
+            volume: 0.03
         });
         
         // Engine sound variables
@@ -185,9 +190,6 @@ class Player {
     }
     
     handleMovement() {
-        // Reset velocity
-        this.sprite.setVelocity(0);
-        
         // Update speed based on terrain
         if (this.isOnGrass) {
             // 70% slower on grass
@@ -204,31 +206,41 @@ class Player {
             this.sprite.angle += this.rotationSpeed;
         }
         
+        // Calculate angle for movement
+        const angle = Phaser.Math.DegToRad(this.sprite.angle - 90);
+        
         // Handle acceleration
         if (this.cursors.up.isDown) {
-            // Calculate velocity based on angle
-            const angle = Phaser.Math.DegToRad(this.sprite.angle - 90);
-            const vx = Math.cos(angle) * this.speed;
-            const vy = Math.sin(angle) * this.speed;
+            // Calculate target velocity based on angle
+            const targetVX = Math.cos(angle) * this.speed;
+            const targetVY = Math.sin(angle) * this.speed;
             
-            this.sprite.setVelocity(vx, vy);
+            // Gradually approach target velocity
+            this.currentVelocityX = Phaser.Math.Linear(this.currentVelocityX, targetVX, this.accelerationFactor);
+            this.currentVelocityY = Phaser.Math.Linear(this.currentVelocityY, targetVY, this.accelerationFactor);
             
-            // Set target speed for acceleration calculation
+            // Set target speed for engine sound calculation
             this.targetSpeed = this.speed;
         } else if (this.cursors.down.isDown) {
-            // Reverse
-            const angle = Phaser.Math.DegToRad(this.sprite.angle - 90);
-            const vx = Math.cos(angle) * -this.speed * 0.5;
-            const vy = Math.sin(angle) * -this.speed * 0.5;
+            // Reverse - calculate target velocity
+            const targetVX = Math.cos(angle) * -this.speed * 0.5;
+            const targetVY = Math.sin(angle) * -this.speed * 0.5;
             
-            this.sprite.setVelocity(vx, vy);
+            // Gradually approach target velocity
+            this.currentVelocityX = Phaser.Math.Linear(this.currentVelocityX, targetVX, this.accelerationFactor);
+            this.currentVelocityY = Phaser.Math.Linear(this.currentVelocityY, targetVY, this.accelerationFactor);
             
-            // Set target speed for acceleration calculation (negative for reverse)
+            // Set target speed for engine sound calculation (negative for reverse)
             this.targetSpeed = -this.speed * 0.5;
         } else {
             // Idle - gradually slow down
+            this.currentVelocityX = Phaser.Math.Linear(this.currentVelocityX, 0, this.accelerationFactor * 1.5);
+            this.currentVelocityY = Phaser.Math.Linear(this.currentVelocityY, 0, this.accelerationFactor * 1.5);
             this.targetSpeed = 0;
         }
+        
+        // Apply the calculated velocity
+        this.sprite.setVelocity(this.currentVelocityX, this.currentVelocityY);
     }
     
     handleShooting(time) {
