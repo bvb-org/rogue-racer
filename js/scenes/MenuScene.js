@@ -37,6 +37,15 @@ class MenuScene extends Phaser.Scene {
                 () => {
                     // Load the saved game state
                     this.game.gameState = savedGame;
+                    
+                    // Ensure all cities have corresponding mission entries
+                    this.game.gameState.cities.forEach(city => {
+                        if (!this.game.gameState.missions[city]) {
+                            this.game.gameState.missions[city] = { completed: false };
+                            console.log(`Added missing mission entry for ${city}`);
+                        }
+                    });
+                    
                     this.startGame(savedGame.currentCity);
                 }
             );
@@ -97,6 +106,14 @@ class MenuScene extends Phaser.Scene {
             // Check if city is locked
             const isLocked = index > 0 && !this.game.gameState.missions[cities[index - 1]].completed;
             
+            // Determine button color based on city
+            let buttonColor = 0x3498db; // Default blue
+            if (city === 'Iasi') {
+                buttonColor = 0xf39c12; // Orange for Iasi
+            } else if (city === 'Vaslui') {
+                buttonColor = 0xe74c3c; // Red for Vaslui
+            }
+            
             // Create city button
             const button = this.createButton(
                 x,
@@ -110,7 +127,7 @@ class MenuScene extends Phaser.Scene {
                         this.showMessage(`Complete ${cities[index - 1]} first!`);
                     }
                 },
-                isLocked ? 0x555555 : 0x3498db
+                isLocked ? 0x555555 : buttonColor
             );
             
             // Add completed indicator
@@ -168,7 +185,7 @@ class MenuScene extends Phaser.Scene {
         // Reset game state to default values
         this.game.gameState = {
             currentCity: 'Bucharest',
-            cities: ['Bucharest', 'Brașov', 'Cluj-Napoca'],
+            cities: ['Bucharest', 'Brașov', 'Cluj-Napoca', 'Timisoara', 'Iasi', 'Vaslui'],
             playerStats: {
                 speed: 1,
                 fireRate: 1,
@@ -178,7 +195,10 @@ class MenuScene extends Phaser.Scene {
             missions: {
                 Bucharest: { completed: false },
                 'Brașov': { completed: false },
-                'Cluj-Napoca': { completed: false }
+                'Cluj-Napoca': { completed: false },
+                'Timisoara': { completed: false },
+                'Iasi': { completed: false },
+                'Vaslui': { completed: false }
             },
             upgrades: {
                 speed: 0,

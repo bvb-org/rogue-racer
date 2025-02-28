@@ -47,6 +47,42 @@ class Track {
                     'Untold Festival',
                     'Vizitați Salina Turda'
                 ]
+            },
+            'Timisoara': {
+                curviness: 0.4, // Slightly curvier than Bucharest
+                obstacles: 0.45, // More obstacles than Cluj-Napoca
+                buildings: 0.6, // Same as Cluj-Napoca
+                landmarks: [],
+                billboards: [
+                    'Bine ați venit în Timișoara!',
+                    'Capitala Culturală Europeană',
+                    'Piața Unirii',
+                    'Catedrala Metropolitană'
+                ]
+            },
+            'Iasi': {
+                curviness: 0.6, // More curves than Cluj-Napoca
+                obstacles: 0.5, // Same as Brașov
+                buildings: 0.5, // Medium building density
+                landmarks: [],
+                billboards: [
+                    'Bine ați venit în Iași!',
+                    'Palatul Culturii',
+                    'Universitatea Alexandru Ioan Cuza',
+                    'Grădina Botanică'
+                ]
+            },
+            'Vaslui': {
+                curviness: 0.8, // Most curves (challenging roads)
+                obstacles: 0.6, // Highest obstacle density
+                buildings: 0.3, // Lower building density
+                landmarks: [],
+                billboards: [
+                    'Bine ați venit în Vaslui!',
+                    'Muzeul Județean Ștefan cel Mare',
+                    'Centrul Civic',
+                    'Parcul Copou'
+                ]
             }
         };
         

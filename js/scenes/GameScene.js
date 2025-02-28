@@ -149,6 +149,18 @@ class GameScene extends Phaser.Scene {
                 carSpawnRate = 1500; // Halved from 3000 (double the cars)
                 droneSpawnRate = 15000; // Tripled from 5000 (1/3 of original drones)
                 break;
+            case 'Timisoara':
+                carSpawnRate = 1200; // More difficult than Cluj-Napoca
+                droneSpawnRate = 12000; // More drones than Cluj-Napoca
+                break;
+            case 'Iasi':
+                carSpawnRate = 1000; // More difficult than Timisoara
+                droneSpawnRate = 9000; // More drones than Timisoara
+                break;
+            case 'Vaslui':
+                carSpawnRate = 800; // Most difficult level
+                droneSpawnRate = 6000; // Most drones
+                break;
             default:
                 carSpawnRate = 2500; // Halved from 5000 (double the cars)
                 droneSpawnRate = 21000; // Tripled from 7000 (1/3 of original drones)

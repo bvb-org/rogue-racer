@@ -83,7 +83,8 @@ class UpgradeScene extends Phaser.Scene {
         const spacing = 40;
         
         cities.forEach((city, index) => {
-            const completed = this.game.gameState.missions[city].completed;
+            // Check if mission exists before accessing its completed property
+            const completed = this.game.gameState.missions[city] ? this.game.gameState.missions[city].completed : false;
             const color = completed ? '#2ecc71' : '#e74c3c';
             const status = completed ? 'Completed' : 'Incomplete';
             
@@ -94,7 +95,10 @@ class UpgradeScene extends Phaser.Scene {
         });
         
         // Check if all cities are completed
-        const allCompleted = cities.every(city => this.game.gameState.missions[city].completed);
+        // Check if mission exists before accessing its completed property
+        const allCompleted = cities.every(city =>
+            this.game.gameState.missions[city] ? this.game.gameState.missions[city].completed : false
+        );
         
         if (allCompleted) {
             this.add.text(x / 2, y + (cities.length + 1) * spacing, 'All missions completed!', {

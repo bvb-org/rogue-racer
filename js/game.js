@@ -26,7 +26,7 @@ const config = {
 // Game state
 const gameState = {
     currentCity: 'Bucharest', // Starting city
-    cities: ['Bucharest', 'Brașov', 'Cluj-Napoca'],
+    cities: ['Bucharest', 'Brașov', 'Cluj-Napoca', 'Timisoara', 'Iasi', 'Vaslui'],
     playerStats: {
         speed: 1,
         fireRate: 1,
@@ -36,7 +36,10 @@ const gameState = {
     missions: {
         Bucharest: { completed: false },
         'Brașov': { completed: false },
-        'Cluj-Napoca': { completed: false }
+        'Cluj-Napoca': { completed: false },
+        'Timisoara': { completed: false },
+        'Iasi': { completed: false },
+        'Vaslui': { completed: false }
     },
     upgrades: {
         speed: 0,
@@ -62,6 +65,14 @@ window.onload = function() {
     const savedGame = GameStorage.loadGame();
     if (savedGame) {
         Object.assign(game.gameState, savedGame);
+        
+        // Ensure all cities have corresponding mission entries
+        game.gameState.cities.forEach(city => {
+            if (!game.gameState.missions[city]) {
+                game.gameState.missions[city] = { completed: false };
+                console.log(`Added missing mission entry for ${city}`);
+            }
+        });
     }
     
     // Handle window resize
