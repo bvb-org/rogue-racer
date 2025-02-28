@@ -12,7 +12,8 @@ class Player {
         this.sprite.setDepth(10);
         
         // Player properties
-        this.speed = 200 * scene.game.gameState.playerStats.speed;
+        this.baseSpeed = 200 * scene.game.gameState.playerStats.speed;
+        this.speed = this.baseSpeed;
         this.rotationSpeed = 3;
         this.health = scene.game.gameState.playerStats.health;
         this.maxHealth = 100;
@@ -21,6 +22,7 @@ class Player {
         this.lastFired = 0;
         this.invulnerable = false;
         this.invulnerableTime = 1000; // ms
+        this.isOnGrass = false; // Flag to track if player is on grass
         
         // Create bullets group
         this.bullets = scene.physics.add.group({
@@ -78,6 +80,15 @@ class Player {
         // Reset velocity
         this.sprite.setVelocity(0);
         
+        // Update speed based on terrain
+        if (this.isOnGrass) {
+            // 50% slower on grass
+            this.speed = this.baseSpeed * 0.5;
+        } else {
+            // Normal speed on road
+            this.speed = this.baseSpeed;
+        }
+        
         // Handle rotation
         if (this.cursors.left.isDown) {
             this.sprite.angle -= this.rotationSpeed;
@@ -94,8 +105,9 @@ class Player {
             
             this.sprite.setVelocity(vx, vy);
             
-            // Adjust engine sound pitch based on speed
-            this.engineSound.setRate(1.2);
+            // Adjust engine sound pitch based on speed and terrain
+            const pitchRate = this.isOnGrass ? 0.9 : 1.2;
+            this.engineSound.setRate(pitchRate);
         } else if (this.cursors.down.isDown) {
             // Reverse
             const angle = Phaser.Math.DegToRad(this.sprite.angle - 90);
@@ -104,8 +116,9 @@ class Player {
             
             this.sprite.setVelocity(vx, vy);
             
-            // Adjust engine sound pitch based on speed
-            this.engineSound.setRate(0.8);
+            // Adjust engine sound pitch based on speed and terrain
+            const pitchRate = this.isOnGrass ? 0.6 : 0.8;
+            this.engineSound.setRate(pitchRate);
         } else {
             // Idle
             this.engineSound.setRate(1.0);

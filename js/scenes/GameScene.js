@@ -41,6 +41,11 @@ class GameScene extends Phaser.Scene {
         this.physics.add.overlap(this.player.bullets, this.enemyGroup, this.handleBulletEnemyCollision, null, this);
         this.physics.add.overlap(this.player.sprite, this.pickups, this.handlePlayerPickupCollision, null, this);
         
+        // Add overlap check for grass tiles
+        this.physics.add.overlap(this.player.sprite, this.track.grassTiles, this.handlePlayerOnGrass, null, this);
+        // Add overlap check for road tiles
+        this.physics.add.overlap(this.player.sprite, this.track.roadTiles, this.handlePlayerOnRoad, null, this);
+        
         // Create finish line collision
         const finishPos = this.track.getFinishPosition();
         this.finishLine = this.physics.add.sprite(finishPos.x, finishPos.y, 'road').setVisible(false);
@@ -334,6 +339,20 @@ class GameScene extends Phaser.Scene {
             // Start upgrade scene
             this.scene.start('UpgradeScene', { score: this.score });
         });
+    }
+    
+    handlePlayerOnGrass(player, grassTile) {
+        // Set player on grass flag
+        if (this.player) {
+            this.player.isOnGrass = true;
+        }
+    }
+    
+    handlePlayerOnRoad(player, roadTile) {
+        // Clear player on grass flag
+        if (this.player) {
+            this.player.isOnGrass = false;
+        }
     }
     
     playerDied() {
