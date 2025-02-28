@@ -109,8 +109,8 @@ class BootScene extends Phaser.Scene {
         createPlaceholder('enemy-car', 40, 70, 0xe74c3c);
         createPlaceholder('drone', 30, 30, 0x95a5a6);
         createPlaceholder('bullet', 5, 10, 0xf1c40f);
-        createPlaceholder('road', 100, 100, 0x34495e);
-        createPlaceholder('grass', 100, 100, 0x2ecc71);
+        createPlaceholder('road', 32, 32, 0x34495e);
+        createPlaceholder('grass', 32, 32, 0x2ecc71);
         createPlaceholder('building', 80, 120, 0x7f8c8d);
         createPlaceholder('mountain', 150, 100, 0x795548);
         createPlaceholder('tree', 40, 60, 0x27ae60);

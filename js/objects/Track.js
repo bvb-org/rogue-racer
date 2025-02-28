@@ -6,7 +6,7 @@ class Track {
     constructor(scene, city) {
         this.scene = scene;
         this.city = city;
-        this.tileSize = 100;
+        this.tileSize = 32;
         this.roadWidth = 3; // Number of tiles
         this.trackLength = 100; // Length of track in tiles
         
