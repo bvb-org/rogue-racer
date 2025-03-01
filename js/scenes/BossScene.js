@@ -458,7 +458,7 @@ class BossScene extends Phaser.Scene {
         // Save game
         GameStorage.saveGame(this.game.gameState);
         
-        // Transition to menu scene after delay
+        // Transition to outro scene after delay
         this.time.delayedCall(8000, () => {
             // Stop game music
             if (this.gameMusic) {
@@ -468,9 +468,9 @@ class BossScene extends Phaser.Scene {
             // Show congratulations message
             this.showMessage('Felicitări! Ai salvat România!', 3000);
             
-            // Start menu scene
+            // Start outro scene
             this.time.delayedCall(3000, () => {
-                this.scene.start('MenuScene');
+                this.scene.start('OutroScene');
             });
         });
     }

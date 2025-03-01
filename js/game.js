@@ -24,7 +24,8 @@ const config = {
         IntroScene,
         GameScene,
         UpgradeScene,
-        BossScene
+        BossScene,
+        OutroScene
     ]
 };
 
