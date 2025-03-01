@@ -395,7 +395,7 @@ class UpgradeScene extends Phaser.Scene {
         const container = this.add.container(width/2, height/2).setDepth(201);
         
         // Create message background
-        const messageBg = this.add.rectangle(0, 0, 500, 300, 0x333333)
+        const messageBg = this.add.rectangle(0, 0, 600, 400, 0x333333)
             .setStrokeStyle(4, 0x00ffff);
         container.add(messageBg);
         
@@ -421,20 +421,20 @@ class UpgradeScene extends Phaser.Scene {
         });
         
         // Create description
-        const description = this.add.text(0, 30,
-            "UNDĂ DE ȘOC\n\nDistruge toți inamicii din jurul tău cu o undă de șoc puternică.\n\nApasă tasta 'C' pentru a activa.\n\nTimpul de reîncărcare: 10 secunde", {
-            font: '18px Arial',
+        const description = this.add.text(0, 40,
+            "UNDĂ DE ȘOC\n\nDistruge toți inamicii din jurul tău cu o undă de șoc puternică.\n\nApasă tasta '1' pentru a activa.\n\nTimpul de reîncărcare: 10 secunde\n\nPistolul este selectat cu tasta '2'", {
+            font: '20px Arial',
             fill: '#ffffff',
             align: 'center'
         }).setOrigin(0.5);
         container.add(description);
         
         // Create continue button
-        const button = this.add.rectangle(0, 120, 200, 50, 0x00ffff)
+        const button = this.add.rectangle(0, 190, 200, 50, 0x00ffff)
             .setInteractive();
         container.add(button);
         
-        const buttonText = this.add.text(0, 120, 'CONTINUĂ', {
+        const buttonText = this.add.text(0, 190, 'CONTINUĂ', {
             font: 'bold 18px Arial',
             fill: '#000000'
         }).setOrigin(0.5);
@@ -477,7 +477,7 @@ class UpgradeScene extends Phaser.Scene {
         const container = this.add.container(width/2, height/2).setDepth(201);
         
         // Create message background
-        const messageBg = this.add.rectangle(0, 0, 500, 300, 0x333333)
+        const messageBg = this.add.rectangle(0, 0, 600, 400, 0x333333)
             .setStrokeStyle(4, 0xe74c3c);
         container.add(messageBg);
         
@@ -503,20 +503,20 @@ class UpgradeScene extends Phaser.Scene {
         });
         
         // Create description
-        const description = this.add.text(0, 30,
-            "RACHETĂ\n\nLansează rachete explozive care provoacă daune în zonă.\n\nApasă tasta '2' pentru a selecta această armă.\n\nDaune: Mare, Viteză: Medie", {
-            font: '18px Arial',
+        const description = this.add.text(0, 40,
+            "RACHETĂ\n\nLansează rachete explozive care provoacă daune în zonă.\n\nApasă tasta '3' pentru a selecta această armă.\n\nDaune: Mare, Viteză: Medie", {
+            font: '20px Arial',
             fill: '#ffffff',
             align: 'center'
         }).setOrigin(0.5);
         container.add(description);
         
         // Create continue button
-        const button = this.add.rectangle(0, 120, 200, 50, 0xe74c3c)
+        const button = this.add.rectangle(0, 190, 200, 50, 0xe74c3c)
             .setInteractive();
         container.add(button);
         
-        const buttonText = this.add.text(0, 120, 'CONTINUĂ', {
+        const buttonText = this.add.text(0, 190, 'CONTINUĂ', {
             font: 'bold 18px Arial',
             fill: '#ffffff'
         }).setOrigin(0.5);
@@ -559,7 +559,7 @@ class UpgradeScene extends Phaser.Scene {
         const container = this.add.container(width/2, height/2).setDepth(201);
         
         // Create message background
-        const messageBg = this.add.rectangle(0, 0, 500, 300, 0x333333)
+        const messageBg = this.add.rectangle(0, 0, 600, 400, 0x333333)
             .setStrokeStyle(4, 0x3498db);
         container.add(messageBg);
         
@@ -585,20 +585,20 @@ class UpgradeScene extends Phaser.Scene {
         });
         
         // Create description
-        const description = this.add.text(0, 30,
-            "LASER\n\nTrage cu raze laser rapide și precise.\n\nApasă tasta '3' pentru a selecta această armă.\n\nDaune: Medii, Viteză: Mare", {
-            font: '18px Arial',
+        const description = this.add.text(0, 40,
+            "LASER\n\nTrage cu raze laser rapide și precise.\n\nApasă tasta '4' pentru a selecta această armă.\n\nDaune: Medii, Viteză: Mare", {
+            font: '20px Arial',
             fill: '#ffffff',
             align: 'center'
         }).setOrigin(0.5);
         container.add(description);
         
         // Create continue button
-        const button = this.add.rectangle(0, 120, 200, 50, 0x3498db)
+        const button = this.add.rectangle(0, 190, 200, 50, 0x3498db)
             .setInteractive();
         container.add(button);
         
-        const buttonText = this.add.text(0, 120, 'CONTINUĂ', {
+        const buttonText = this.add.text(0, 190, 'CONTINUĂ', {
             font: 'bold 18px Arial',
             fill: '#ffffff'
         }).setOrigin(0.5);

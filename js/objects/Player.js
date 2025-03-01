@@ -45,7 +45,11 @@ class Player {
                 projectileKey: 'rocket',
                 sound: 'rocket-launch',
                 explosionRadius: 100,
-                unlocked: scene.game.gameState.rocketUnlocked || scene.game.gameState.currentCity !== 'Bucharest' // Unlocked after first city or if already unlocked
+                unlocked: scene.game.gameState.rocketUnlocked ||
+                          scene.game.gameState.currentCity === 'Cluj-Napoca' ||
+                          scene.game.gameState.currentCity === 'Timisoara' ||
+                          scene.game.gameState.currentCity === 'Iasi' ||
+                          scene.game.gameState.currentCity === 'Vaslui' // Unlocked after Brașov or if already unlocked
             },
             laser: {
                 name: 'Laser',
@@ -56,10 +60,9 @@ class Player {
                 projectileKey: 'laser',
                 sound: 'laser',
                 unlocked: scene.game.gameState.laserUnlocked ||
-                          scene.game.gameState.currentCity === 'Cluj-Napoca' ||
                           scene.game.gameState.currentCity === 'Timisoara' ||
                           scene.game.gameState.currentCity === 'Iasi' ||
-                          scene.game.gameState.currentCity === 'Vaslui' // Unlocked in later cities or if already unlocked
+                          scene.game.gameState.currentCity === 'Vaslui' // Unlocked after Cluj-Napoca or if already unlocked
             }
         };
         
@@ -117,12 +120,12 @@ class Player {
         // Setup input
         this.cursors = scene.input.keyboard.createCursorKeys();
         this.spaceKey = scene.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.SPACE);
-        this.shockwaveKey = scene.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.C);
+        this.shockwaveKey = scene.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.ONE);
         
         // Weapon switching keys
-        this.key1 = scene.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.ONE);
         this.key2 = scene.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.TWO);
         this.key3 = scene.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.THREE);
+        this.key4 = scene.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.FOUR);
         
         // Create health bar
         this.createHealthBar();
@@ -159,19 +162,19 @@ class Player {
     
     handleWeaponSwitching() {
         // Switch to pistol (default weapon)
-        if (this.key1.isDown && this.currentWeapon !== 'bullet') {
+        if (this.key2.isDown && this.currentWeapon !== 'bullet') {
             this.currentWeapon = 'bullet';
             this.scene.showMessage(`Armă: ${this.weapons.bullet.name}`);
         }
         
         // Switch to rocket launcher if unlocked
-        if (this.key2.isDown && this.weapons.rocket.unlocked && this.currentWeapon !== 'rocket') {
+        if (this.key3.isDown && this.weapons.rocket.unlocked && this.currentWeapon !== 'rocket') {
             this.currentWeapon = 'rocket';
             this.scene.showMessage(`Armă: ${this.weapons.rocket.name}`);
         }
         
         // Switch to laser if unlocked
-        if (this.key3.isDown && this.weapons.laser.unlocked && this.currentWeapon !== 'laser') {
+        if (this.key4.isDown && this.weapons.laser.unlocked && this.currentWeapon !== 'laser') {
             this.currentWeapon = 'laser';
             this.scene.showMessage(`Armă: ${this.weapons.laser.name}`);
         }
@@ -709,7 +712,7 @@ class Player {
         
         // Create shockwave text
         this.shockwaveText = this.scene.add.text(
-            100, 90, 'Undă de Șoc [C]', {
+            100, 90, 'Undă de Șoc [1]', {
                 font: '14px Arial',
                 fill: '#ffffff'
             }
@@ -753,11 +756,11 @@ class Player {
             // Update color based on cooldown status
             if (cooldownPercent >= 1) {
                 this.shockwaveBar.fillColor = 0x00ffff; // Cyan when ready
-                this.shockwaveText.setText('Undă de Șoc [C] - GATA');
+                this.shockwaveText.setText('Undă de Șoc [1] - GATA');
             } else {
                 this.shockwaveBar.fillColor = 0x3498db; // Blue when charging
                 const remainingSeconds = Math.ceil((this.shockwaveCooldown - timeSinceLastUse) / 1000);
-                this.shockwaveText.setText(`Undă de Șoc [C] - ${remainingSeconds}s`);
+                this.shockwaveText.setText(`Undă de Șoc [1] - ${remainingSeconds}s`);
             }
         }
     }

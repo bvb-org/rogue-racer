@@ -473,15 +473,10 @@ class GameScene extends Phaser.Scene {
         this.addScore(bonus);
         this.showMessage(`Bonus: +${bonus} puncte`, 3000);
         
-        // Check if this is the first city completed (Bucharest)
-        const isFirstCityCompleted = this.currentCity === 'Bucharest';
-        
-        // Check if this is a city where laser should be unlocked
-        const shouldUnlockLaser =
-            this.currentCity === 'Cluj-Napoca' ||
-            this.currentCity === 'Timisoara' ||
-            this.currentCity === 'Iasi' ||
-            this.currentCity === 'Vaslui';
+        // Check which city was completed to determine weapon unlocks
+        const isBucharestCompleted = this.currentCity === 'Bucharest';
+        const isBrasovCompleted = this.currentCity === 'Brașov';
+        const isClujCompleted = this.currentCity === 'Cluj-Napoca';
         
         // Transition to upgrade scene after delay
         this.time.delayedCall(3000, () => {
@@ -493,9 +488,9 @@ class GameScene extends Phaser.Scene {
             // Start upgrade scene with appropriate unlock flags
             this.scene.start('UpgradeScene', {
                 score: this.score,
-                unlockShockwave: isFirstCityCompleted,
-                unlockRocket: isFirstCityCompleted,
-                unlockLaser: shouldUnlockLaser && !this.game.gameState.laserUnlocked
+                unlockShockwave: isBucharestCompleted,
+                unlockRocket: isBrasovCompleted,
+                unlockLaser: isClujCompleted && !this.game.gameState.laserUnlocked
             });
         });
     }
