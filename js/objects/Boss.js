@@ -8,9 +8,9 @@ class Boss extends Enemy {
         
         // Override enemy properties for boss
         this.sprite.setScale(4.0); // Make boss much bigger (4x instead of 2x)
-        this.speed = 60; // Slower than regular enemies
-        this.health = 300; // Much more health (increased from 50 to 300)
-        this.maxHealth = 500;
+        this.speed = 70; // Slower than regular enemies
+        this.health = 500; // Much more health (increased from 50 to 300)
+        this.maxHealth = 600;
         this.damage = 40; // More damage on collision
         this.scoreValue = 10000; // Big score reward
         this.active = true;
