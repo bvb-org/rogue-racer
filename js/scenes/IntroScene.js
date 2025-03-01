@@ -17,8 +17,8 @@ class IntroScene extends Phaser.Scene {
         // Create a straight road for the intro
         this.createRoad(width, height);
         
-        // Add player car
-        this.playerCar = this.physics.add.sprite(width / 2, height - 150, 'player-car');
+        // Add player car (positioned lower on the screen)
+        this.playerCar = this.physics.add.sprite(width / 2, height, 'player-car');
         this.playerCar.setScale(1.5);
         
         // Add enemy car (initially off-screen)
@@ -31,8 +31,8 @@ class IntroScene extends Phaser.Scene {
             fill: '#ffffff'
         }).setOrigin(0.5);
         
-        // Backstory text with improved visibility (added stroke and shadow)
-        this.storyText = this.add.text(width / 2, 150, 'Fugi de CG și POT!\nÎncearcă să îi învingi și să ajungi la CT final.', {
+        // Backstory text with improved visibility (moved higher to avoid overlap with enemy car)
+        this.storyText = this.add.text(width / 2, 130, 'Fugi de CG și POT!\nÎncearcă să îi învingi și să ajungi la CT final.', {
             font: '24px Arial',
             fill: '#ffffff',
             align: 'center',
@@ -41,11 +41,11 @@ class IntroScene extends Phaser.Scene {
             shadow: { offsetX: 2, offsetY: 2, color: '#000000', blur: 5, fill: true }
         }).setOrigin(0.5);
         
-        // Dialog boxes
-        this.enemyDialog = this.createDialogBox(width / 2, 200, 'Te vom prinde! Nu poți scăpa de noi!', false);
+        // Dialog boxes (positioned to avoid overlap with cars)
+        this.enemyDialog = this.createDialogBox(width / 2, 220, 'Te vom prinde! Nu poți scăpa de noi!', false);
         this.enemyDialog.setVisible(false);
         
-        this.playerDialog = this.createDialogBox(width / 2, height - 250, 'Vă voi învinge! Aveți încredere în mine!', true);
+        this.playerDialog = this.createDialogBox(width / 2, height - 150, 'Vă voi învinge! Aveți încredere în mine!', true);
         this.playerDialog.setVisible(false);
         
         // Continue button (initially hidden)
@@ -191,15 +191,15 @@ class IntroScene extends Phaser.Scene {
         // Move player car up a bit
         timeline.add({
             targets: this.playerCar,
-            y: height - 200,
+            y: height - 250,
             duration: 1500,
             ease: 'Power1'
         });
         
-        // Move enemy car on screen
+        // Move enemy car on screen (positioned higher to avoid text overlap)
         timeline.add({
             targets: this.enemyCar,
-            y: 150,
+            y: 300,
             duration: 2000,
             ease: 'Power1',
             onComplete: () => {
@@ -262,16 +262,22 @@ class IntroScene extends Phaser.Scene {
         // Add shoot sound
         this.shootSound = this.sound.add('shoot', {
             loop: false,
-            volume: 0.3
+            volume: 0.4 // Slightly louder
         });
         
         // Timeline for the shooting sequence
         const timeline = this.tweens.createTimeline();
         
+        // Pause before shooting to make it more dramatic
+        timeline.add({
+            targets: {},
+            duration: 500
+        });
+        
         // First shooting animation
         timeline.add({
             targets: {},
-            duration: 300,
+            duration: 400,
             onStart: () => {
                 this.shootBullet();
             }
@@ -280,7 +286,7 @@ class IntroScene extends Phaser.Scene {
         // Second shooting animation
         timeline.add({
             targets: {},
-            duration: 300,
+            duration: 400,
             onStart: () => {
                 this.shootBullet();
             }
@@ -289,16 +295,26 @@ class IntroScene extends Phaser.Scene {
         // Third shooting animation
         timeline.add({
             targets: {},
-            duration: 300,
+            duration: 400,
             onStart: () => {
                 this.shootBullet();
                 
                 // Create explosion effect on enemy car
                 this.time.delayedCall(200, () => {
+                    // Create a larger explosion
                     this.createExplosion(this.enemyCar.x, this.enemyCar.y);
+                    // Flash the screen for dramatic effect
+                    this.cameras.main.flash(300, 255, 255, 255);
+                    // Destroy the enemy car
                     this.enemyCar.destroy();
                 });
             }
+        });
+        
+        // Wait a moment after the explosion
+        timeline.add({
+            targets: {},
+            duration: 800
         });
         
         // Player car drives off screen
@@ -326,34 +342,79 @@ class IntroScene extends Phaser.Scene {
             bullet.setPosition(this.playerCar.x, this.playerCar.y - 30);
             bullet.setActive(true);
             bullet.setVisible(true);
+            bullet.setScale(1.5); // Make bullet larger and more visible
             
             // Set bullet velocity (upward)
-            bullet.setVelocity(0, -500);
+            bullet.setVelocity(0, -600); // Faster bullet
+            
+            // Add a glow effect to the bullet
+            bullet.setTint(0x00ffff);
+            
+            // Add a trail effect
+            const trail = this.add.particles(bullet.x, bullet.y, 'bullet', {
+                speed: 10,
+                scale: { start: 0.6, end: 0 },
+                lifespan: 300,
+                blendMode: 'ADD',
+                tint: 0x00ffff,
+                follow: bullet
+            });
             
             // Play shoot sound
             this.shootSound.play();
             
-            // Auto-destroy bullet after 1 second
+            // Auto-destroy bullet and trail after 1 second
             this.time.delayedCall(1000, () => {
                 bullet.setActive(false);
                 bullet.setVisible(false);
+                trail.destroy();
             });
         }
     }
     
     createExplosion(x, y) {
-        // Create explosion particle effect
+        // Create a more dramatic explosion particle effect
         const explosion = this.add.particles(x, y, 'bullet', {
-            speed: { min: 50, max: 150 },
-            scale: { start: 1, end: 0 },
-            lifespan: 800,
+            speed: { min: 80, max: 200 },
+            scale: { start: 2, end: 0 },
+            lifespan: 1000,
             blendMode: 'ADD',
-            quantity: 30
+            quantity: 50,
+            tint: [ 0xff0000, 0xff7700, 0xffff00 ] // Red, orange, yellow colors
         });
         
+        // Add a secondary explosion effect with different parameters
+        const secondaryExplosion = this.add.particles(x, y, 'bullet', {
+            speed: { min: 50, max: 150 },
+            scale: { start: 1.5, end: 0 },
+            lifespan: 800,
+            blendMode: 'ADD',
+            quantity: 30,
+            tint: 0xffffff
+        });
+        
+        // Add a shockwave effect
+        const shockwave = this.add.circle(x, y, 10, 0xffffff, 0.7);
+        this.tweens.add({
+            targets: shockwave,
+            radius: 100,
+            alpha: 0,
+            duration: 500,
+            ease: 'Cubic.Out',
+            onComplete: () => {
+                shockwave.destroy();
+            }
+        });
+        
+        // Play crash sound if available
+        if (this.sound.get('crash')) {
+            this.sound.play('crash', { volume: 0.5 });
+        }
+        
         // Auto-destroy particles after animation completes
-        this.time.delayedCall(800, () => {
+        this.time.delayedCall(1000, () => {
             explosion.destroy();
+            secondaryExplosion.destroy();
         });
     }
     
