@@ -352,8 +352,8 @@ class MenuScene extends Phaser.Scene {
             .setDepth(200);
         
         // Create controls dialog
-        const dialogWidth = 400;
-        const dialogHeight = 300;
+        const dialogWidth = 450;
+        const dialogHeight = 380;
         const dialog = this.add.rectangle(width/2, height/2, dialogWidth, dialogHeight, 0x333333)
             .setDepth(201);
             
@@ -363,14 +363,14 @@ class MenuScene extends Phaser.Scene {
             .setDepth(202);
         
         // Add title
-        const title = this.add.text(width/2, height/2 - 120, 'CONTROALE', {
+        const title = this.add.text(width/2, height/2 - 140, 'CONTROALE', {
             font: 'bold 24px Arial',
             fill: '#ffffff'
         }).setOrigin(0.5).setDepth(202);
         
         // Add controls text
-        const controlsText = this.add.text(width/2, height/2 - 50,
-            '↑  Accelerează\n↓  Frânează/Marșarier\n←  Virează Stânga\n→  Virează Dreapta\nSPACE - Trage\nC - Undă de șoc', {
+        const controlsText = this.add.text(width/2, height/2 - 20,
+            '↑  Accelerează\n↓  Frânează/Marșarier\n←  Virează Stânga\n→  Virează Dreapta\nSPACE - Trage\n1 - Undă de șoc\n2 - Pistol\n3 - Rachetă\n4 - Laser', {
             font: '18px Arial',
             fill: '#ffffff',
             align: 'center'
@@ -379,11 +379,11 @@ class MenuScene extends Phaser.Scene {
         // Add OK button
         const buttonWidth = 100;
         const buttonHeight = 40;
-        const button = this.add.rectangle(width/2, height/2 + 80, buttonWidth, buttonHeight, 0x3498db)
+        const button = this.add.rectangle(width/2, height/2 + 110, buttonWidth, buttonHeight, 0x3498db)
             .setInteractive()
             .setDepth(202);
             
-        const buttonText = this.add.text(width/2, height/2 + 80, 'OK', {
+        const buttonText = this.add.text(width/2, height/2 + 110, 'OK', {
             font: 'bold 18px Arial',
             fill: '#ffffff'
         }).setOrigin(0.5).setDepth(203);

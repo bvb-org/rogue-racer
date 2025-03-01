@@ -32,7 +32,7 @@ class IntroScene extends Phaser.Scene {
         }).setOrigin(0.5);
         
         // Backstory text with improved visibility (moved higher to avoid overlap with enemy car)
-        this.storyText = this.add.text(width / 2, 130, 'Fugi de CG și prietenii săi!\nÎncearcă să îi învingi și să ajungi la CT final.', {
+        this.storyText = this.add.text(width / 2, 130, 'Înfrange CG-iștii!\nScopul tău este să bați big boss CG din ultimul nivel!', {
             font: '24px Arial',
             fill: '#ffffff',
             align: 'center',
@@ -42,10 +42,10 @@ class IntroScene extends Phaser.Scene {
         }).setOrigin(0.5);
         
         // Dialog boxes (positioned to avoid overlap with cars)
-        this.enemyDialog = this.createDialogBox(width / 2, 220, 'Te vom prinde! Nu poți scăpa de noi!', false);
+        this.enemyDialog = this.createDialogBox(width / 2, 220, '„HRANĂ, APĂ, ENERGIE”', false);
         this.enemyDialog.setVisible(false);
         
-        this.playerDialog = this.createDialogBox(width / 2, height - 150, 'Vă voi învinge! Aveți încredere în mine!', true);
+        this.playerDialog = this.createDialogBox(width / 2, height - 150, 'taci in plm pew pew h2o cezariană pew', true);
         this.playerDialog.setVisible(false);
         
         // Continue button (initially hidden)
@@ -482,11 +482,11 @@ class IntroScene extends Phaser.Scene {
             align: 'center'
         }).setOrigin(0.5).setDepth(202);
         
-        // Add shockwave text with note that it's locked
-        const shockwaveText = this.add.text(width/2, height/2 + 30,
-            'C - Undă de șoc\n(Deblocat după primul nivel)', {
+        // Add weapons text with notes about unlocking
+        const weaponsText = this.add.text(width/2, height/2 + 30,
+            '1 - Undă de șoc (Deblocat după primul nivel)\n2 - Pistol\n3 - Rachetă (Deblocat după al doilea nivel)\n4 - Laser (Deblocat după al treilea nivel)', {
             font: '18px Arial',
-            fill: '#888888', // Gray color to indicate it's locked
+            fill: '#888888', // Gray color to indicate locked items
             align: 'center'
         }).setOrigin(0.5).setDepth(202);
         
@@ -524,7 +524,7 @@ class IntroScene extends Phaser.Scene {
             border.destroy();
             title.destroy();
             controlsText.destroy();
-            shockwaveText.destroy();
+            weaponsText.destroy();
             button.destroy();
             buttonText.destroy();
             

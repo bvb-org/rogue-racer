@@ -9,8 +9,8 @@ class Boss extends Enemy {
         // Override enemy properties for boss
         this.sprite.setScale(4.0); // Make boss much bigger (4x instead of 2x)
         this.speed = 70; // Slower than regular enemies
-        this.health = 500; // Much more health (increased from 50 to 300)
-        this.maxHealth = 600;
+        this.health = 800; // Much more health (increased from 50 to 300)
+        this.maxHealth = 900;
         this.damage = 40; // More damage on collision
         this.scoreValue = 10000; // Big score reward
         this.active = true;
@@ -29,24 +29,24 @@ class Boss extends Enemy {
         
         // Boss dialogue options
         this.dialogues = [
-            "Așa deci, tu ești cel care încearcă să salveze România?",
-            "Nu poți opri planul meu de a prelua controlul!",
-            "Mașina mea este superioară! Nu ai nicio șansă!",
-            "Crezi că poți învinge Marele Boss?",
-            "România va fi a mea!",
-            "Traficul din București va părea o joacă după ce termin cu tine!",
-            "Ai curaj, dar îți lipsește puterea!",
-            "Încearcă să mă oprești dacă poți!",
-            "Asta e tot ce poți face? Dezamăgitor!",
-            "Voi transforma toate drumurile în gropi!"
+            "Apa va fi pe primul loc, cucerim lumea",
+            "Am trăit în Austria, Elveția. Nu ai ce să mănânci acolo",
+            "Vibrația cuvântului care duce la măreția omului de a fi demn",
+            "5G este extrem de periculos pentru viața omului",
+            "De asta se tem toate religiile lumii: să afli cine ești",
+            "Lucian Blaga este unul din principalii interziși în România",
+            "Totul este energie, vibrație, undă, spirit",
+            "Oamenii sunt într-un 'alfabetism' emoțional crunt",
+            "Capitalismul este egal cu comunismul",
+            "Omul nu are libertatea de a lucra unde vrea"
         ];
         
         // Dialogue for specific health thresholds
         this.thresholdDialogues = {
-            0.8: "Abia m-ai zgâriat! Acum să vezi ce pot eu!",
-            0.6: "Începi să mă enervezi! Ia asta!",
-            0.4: "Imposibil! Nimeni nu m-a rănit așa până acum!",
-            0.2: "Nu! Nu voi fi învins! NICIODATĂ!"
+            0.8: "Gaza se numește Gaza de la gaz",
+            0.6: "Omul că să fie fericit ... este hrană apă energie",
+            0.4: "Numai din deșeuri noi putem să trăim energetic",
+            0.2: "Mihai Eminescu a fost cel mai periculos om după Iisus Hristos"
         };
     }
     
