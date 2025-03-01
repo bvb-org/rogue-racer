@@ -245,11 +245,11 @@ class GameScene extends Phaser.Scene {
         
         // Show message about new enemy types
         if (this.currentCity === 'Brașov') {
-            this.showMessage('Atenție! Mașini rapide în zonă!', 3000);
+            this.showMessage('Atenție! AUR te vrea în echipa sa!', 3000);
         } else if (this.currentCity === 'Cluj-Napoca') {
-            this.showMessage('Atenție! Tancuri blindate în zonă!', 3000);
+            this.showMessage('SOS! Tancuri blindate în zonă!', 3000);
         } else if (this.currentCity === 'Timisoara') {
-            this.showMessage('Atenție! Inamici cu arme în zonă!', 3000);
+            this.showMessage('Да здравствует Румыния!', 3000);
         }
     }
     
