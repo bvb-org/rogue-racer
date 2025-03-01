@@ -30,28 +30,32 @@ class MenuScene extends Phaser.Scene {
             align: 'center'
         }).setOrigin(0.5);
         
-        // Controls button
-        this.createButton(
-            width / 2,
-            height / 4 + 170,
-            'Controale',
-            () => {
-                this.showControlsDialog();
-            }
-        );
+        // Controls button - with different style and position
+        const controlsButton = this.add.rectangle(width - 120, 50, 180, 50, 0x27ae60, 1)
+            .setInteractive();
+        const controlsText = this.add.text(width - 120, 50, 'Controale', {
+            font: 'bold 18px Arial',
+            fill: '#ffffff'
+        }).setOrigin(0.5);
         
-        // Add boss test button if enabled
-        if (ENABLE_BOSS_TEST) {
-            this.createButton(
-                width / 2,
-                height / 4 + 230,
-                'BOSS TEST',
-                () => {
-                    this.startBossLevel();
-                },
-                0xe74c3c // Red color for boss button
-            );
-        }
+        controlsButton.on('pointerover', () => {
+            controlsButton.setFillStyle(0x219653);
+        });
+        
+        controlsButton.on('pointerout', () => {
+            controlsButton.setFillStyle(0x27ae60);
+        });
+        
+        controlsButton.on('pointerdown', () => {
+            controlsButton.setFillStyle(0x1e8449);
+        });
+        
+        controlsButton.on('pointerup', () => {
+            controlsButton.setFillStyle(0x219653);
+            this.showControlsDialog();
+        });
+        
+        // Boss button is now part of the city selection layout
         
         // City selection
         this.createCitySelection(width, height);
@@ -125,15 +129,27 @@ class MenuScene extends Phaser.Scene {
         const cities = this.game.gameState.cities;
         const buttonWidth = 200;
         const spacing = 30;
-        const totalWidth = cities.length * buttonWidth + (cities.length - 1) * spacing;
-        const startX = (width - totalWidth) / 2 + buttonWidth / 2;
+        const rowSpacing = 70; // Vertical spacing between rows
         
-        cities.forEach((city, index) => {
-            const x = startX + index * (buttonWidth + spacing);
-            const y = height / 2 + 20;
+        // First row - 4 cities
+        const firstRowCities = cities.slice(0, 4);
+        const firstRowWidth = firstRowCities.length * buttonWidth + (firstRowCities.length - 1) * spacing;
+        const firstRowStartX = (width - firstRowWidth) / 2 + buttonWidth / 2;
+        const firstRowY = height / 2 + 20;
+        
+        // Second row - remaining cities
+        const secondRowCities = cities.slice(4);
+        const secondRowWidth = secondRowCities.length * buttonWidth + (secondRowCities.length - 1) * spacing;
+        const secondRowStartX = (width - secondRowWidth) / 2 + buttonWidth / 2;
+        const secondRowY = firstRowY + rowSpacing;
+        
+        // Create first row of city buttons
+        firstRowCities.forEach((city, index) => {
+            const x = firstRowStartX + index * (buttonWidth + spacing);
             
             // Check if city is locked
-            const isLocked = index > 0 && !this.game.gameState.missions[cities[index - 1]].completed;
+            const cityIndex = cities.indexOf(city);
+            const isLocked = cityIndex > 0 && !this.game.gameState.missions[cities[cityIndex - 1]].completed;
             
             // Determine button color based on city
             let buttonColor = 0x3498db; // Default blue
@@ -146,14 +162,14 @@ class MenuScene extends Phaser.Scene {
             // Create city button
             const button = this.createButton(
                 x,
-                y,
+                firstRowY,
                 city + (isLocked ? ' 🔒' : ''),
                 () => {
                     if (!isLocked) {
                         this.startGame(city);
                     } else {
                         // Show "complete previous city" message
-                        this.showMessage(`Completează ${cities[index - 1]} mai întâi!`);
+                        this.showMessage(`Completează ${cities[cityIndex - 1]} mai întâi!`);
                     }
                 },
                 isLocked ? 0x555555 : buttonColor
@@ -161,12 +177,67 @@ class MenuScene extends Phaser.Scene {
             
             // Add completed indicator
             if (this.game.gameState.missions[city].completed) {
-                this.add.text(x + 80, y, '✓', {
+                this.add.text(x + 80, firstRowY, '✓', {
                     font: 'bold 24px Arial',
                     fill: '#2ecc71'
                 }).setOrigin(0.5);
             }
         });
+        
+        // Create second row of city buttons
+        secondRowCities.forEach((city, index) => {
+            const x = secondRowStartX + index * (buttonWidth + spacing);
+            
+            // Check if city is locked
+            const cityIndex = cities.indexOf(city);
+            const isLocked = cityIndex > 0 && !this.game.gameState.missions[cities[cityIndex - 1]].completed;
+            
+            // Determine button color based on city
+            let buttonColor = 0x3498db; // Default blue
+            if (city === 'Iasi') {
+                buttonColor = 0xf39c12; // Orange for Iasi
+            } else if (city === 'Vaslui') {
+                buttonColor = 0xe74c3c; // Red for Vaslui
+            }
+            
+            // Create city button
+            const button = this.createButton(
+                x,
+                secondRowY,
+                city + (isLocked ? ' 🔒' : ''),
+                () => {
+                    if (!isLocked) {
+                        this.startGame(city);
+                    } else {
+                        // Show "complete previous city" message
+                        this.showMessage(`Completează ${cities[cityIndex - 1]} mai întâi!`);
+                    }
+                },
+                isLocked ? 0x555555 : buttonColor
+            );
+            
+            // Add completed indicator
+            if (this.game.gameState.missions[city].completed) {
+                this.add.text(x + 80, secondRowY, '✓', {
+                    font: 'bold 24px Arial',
+                    fill: '#2ecc71'
+                }).setOrigin(0.5);
+            }
+        });
+        
+        // Add boss button to second row if enabled
+        if (ENABLE_BOSS_TEST) {
+            const bossX = secondRowStartX + secondRowCities.length * (buttonWidth + spacing);
+            this.createButton(
+                bossX,
+                secondRowY,
+                'BOSS',
+                () => {
+                    this.startBossLevel();
+                },
+                0xe74c3c // Red color for boss button
+            );
+        }
     }
     
     createButton(x, y, text, callback, color = 0x3498db) {

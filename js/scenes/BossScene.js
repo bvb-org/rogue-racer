@@ -104,6 +104,9 @@ class BossScene extends Phaser.Scene {
             this.enemies.remove(enemy);
         });
         
+        // Clean up projectiles that are too far from the boss
+        this.cleanupProjectiles();
+        
         // Update UI
         this.updateUI();
         
@@ -111,6 +114,43 @@ class BossScene extends Phaser.Scene {
         if (this.boss && !this.boss.active && !this.missionComplete && this.isBossDefeated) {
             this.completeBossMission();
         }
+    }
+    
+    cleanupProjectiles() {
+        // Get all active projectiles
+        const projectiles = this.bossProjectiles.getChildren();
+        
+        // Check each projectile
+        projectiles.forEach(projectile => {
+            if (!projectile.active) return;
+            
+            // Check if projectile lifespan has expired
+            if (projectile.lifespan !== undefined) {
+                projectile.lifespan -= this.game.loop.delta; // Subtract elapsed time since last frame
+                if (projectile.lifespan <= 0) {
+                    projectile.destroy();
+                    return;
+                }
+            }
+            
+            // Simple bounds check - destroy if outside visible area with a small margin
+            const bounds = this.physics.world.bounds;
+            const margin = 100;
+            
+            if (
+                projectile.x < bounds.x - margin ||
+                projectile.x > bounds.width + margin ||
+                projectile.y < bounds.y - margin ||
+                projectile.y > bounds.height + margin
+            ) {
+                projectile.destroy();
+            }
+            
+            // If boss is not active, destroy all projectiles
+            if (!this.boss || !this.boss.active) {
+                projectile.destroy();
+            }
+        });
     }
     
     createUI() {
@@ -178,17 +218,112 @@ class BossScene extends Phaser.Scene {
     handlePlayerProjectileCollision(player, projectile) {
         // Player takes damage from projectile
         if (this.player) {
-            this.player.takeDamage(25); // Increased from 10 to 25 for more challenge
+            // Fixed damage amount
+            const damage = 20;
+            this.player.takeDamage(damage);
             
-            // Add collision effect
-            this.addCollisionEffect(projectile.x, projectile.y);
+            // Add simple but clear collision effect
+            this.addSimpleCollisionEffect(projectile.x, projectile.y);
             
-            // Add screen shake effect for more impact
+            // Add screen shake for feedback
             this.cameras.main.shake(200, 0.01);
             
             // Destroy projectile
             projectile.destroy();
+            
+            // Show damage message
+            const damageText = this.add.text(
+                projectile.x,
+                projectile.y - 20,
+                `-${damage}`,
+                {
+                    font: 'bold 24px Arial',
+                    fill: '#ff0000',
+                    stroke: '#000000',
+                    strokeThickness: 4
+                }
+            ).setDepth(100);
+            
+            // Animate the damage text
+            this.tweens.add({
+                targets: damageText,
+                y: damageText.y - 50,
+                alpha: { from: 1, to: 0 },
+                duration: 1000,
+                onComplete: () => {
+                    damageText.destroy();
+                }
+            });
+            
+            // Log to console for debugging
+            console.log("Player hit by boss projectile! Damage:", damage);
         }
+    }
+    
+    // Simpler collision effect that's more reliable
+    addSimpleCollisionEffect(x, y) {
+        // Create a simple flash
+        const flash = this.add.circle(x, y, 40, 0xffff00, 0.8);
+        flash.setDepth(20);
+        
+        // Animate the flash
+        this.tweens.add({
+            targets: flash,
+            alpha: 0,
+            scale: 2,
+            duration: 300,
+            onComplete: () => {
+                flash.destroy();
+            }
+        });
+    }
+    
+    addEnhancedCollisionEffect(x, y) {
+        // Create more dramatic particle effect for boss projectile hits
+        const particles = this.add.particles(x, y, 'bullet', {
+            speed: { min: 100, max: 250 },
+            scale: { start: 2.0, end: 0 },
+            lifespan: 800,
+            blendMode: 'ADD',
+            tint: [0xffff00, 0xffffff, 0xff8800], // Yellow, white, and orange particles
+            quantity: 40
+        });
+        
+        // Add a larger flash effect
+        const flash = this.add.circle(x, y, 60, 0xffffff, 0.9);
+        flash.setDepth(20);
+        
+        // Animate the flash
+        this.tweens.add({
+            targets: flash,
+            alpha: 0,
+            scale: 3,
+            duration: 400,
+            onComplete: () => {
+                flash.destroy();
+            }
+        });
+        
+        // Add a secondary explosion ring
+        const ring = this.add.circle(x, y, 10, 0xffff00, 0.7);
+        ring.setDepth(19);
+        ring.setStrokeStyle(4, 0xff8800);
+        
+        // Animate the ring
+        this.tweens.add({
+            targets: ring,
+            radius: 100,
+            alpha: 0,
+            duration: 600,
+            onComplete: () => {
+                ring.destroy();
+            }
+        });
+        
+        // Auto-destroy particles after animation completes
+        this.time.delayedCall(800, () => {
+            particles.destroy();
+        });
     }
     
     handlePlayerObstacleCollision(player, obstacle) {

@@ -15,7 +15,7 @@ class Boss extends Enemy {
         this.scoreValue = 10000; // Big score reward
         this.active = true;
         this.lastProjectileTime = 0;
-        this.projectileCooldown = 1000; // ms between projectile volleys (reduced from 2000ms)
+        this.projectileCooldown = 2000; // ms between projectile shots (simple, consistent timing)
         this.dialogueCooldown = 8000; // ms between dialogue messages
         this.lastDialogueTime = 0;
         this.healthThresholds = [0.8, 0.6, 0.4, 0.2]; // Trigger dialogue at these health percentages
@@ -81,78 +81,43 @@ class Boss extends Enemy {
     }
     
     fireProjectiles(time) {
-        // Determine projectile pattern based on health
-        const healthPercent = this.health / this.maxHealth;
-        
-        // Always fire at least one projectile directly at the player
+        // Only fire if player is active
         if (this.scene.player && this.scene.player.sprite.active) {
             // Calculate angle to player for accurate targeting
             const dx = this.scene.player.sprite.x - this.sprite.x;
             const dy = this.scene.player.sprite.y - this.sprite.y;
             const angleToPlayer = Math.atan2(dy, dx);
             
-            // Convert to degrees for easier manipulation
-            const angleToPlayerDeg = Phaser.Math.RadToDeg(angleToPlayer);
-            
-            // Always fire at least one projectile directly at the player
-            this.fireProjectileInDirection(angleToPlayerDeg);
-            
-            // Add additional projectiles based on health phase
-            if (healthPercent > 0.7) {
-                // Phase 1: Simple spread (3 projectiles)
-                this.fireProjectileInDirection(angleToPlayerDeg - 20);
-                this.fireProjectileInDirection(angleToPlayerDeg + 20);
-            } else if (healthPercent > 0.4) {
-                // Phase 2: Five-way spread + side shots
-                this.fireProjectileInDirection(angleToPlayerDeg - 30);
-                this.fireProjectileInDirection(angleToPlayerDeg - 15);
-                this.fireProjectileInDirection(angleToPlayerDeg + 15);
-                this.fireProjectileInDirection(angleToPlayerDeg + 30);
-                
-                // Side shots perpendicular to player direction
-                this.fireProjectileInDirection(angleToPlayerDeg + 90);
-                this.fireProjectileInDirection(angleToPlayerDeg - 90);
-            } else {
-                // Phase 3: All directions + spiral pattern
-                // Spiral pattern (8 projectiles in a spiral)
-                for (let i = 0; i < 8; i++) {
-                    const spiralAngle = angleToPlayerDeg + (i * 45);
-                    this.fireProjectileInDirection(spiralAngle);
-                }
-                
-                // Add random scattered shots for extra challenge
-                for (let i = 0; i < 4; i++) {
-                    const randomAngle = Phaser.Math.Between(0, 360);
-                    this.fireProjectileInDirection(randomAngle);
-                }
-            }
+            // Fire a single projectile directly at the player
+            this.fireProjectileInDirection(angleToPlayer);
         }
     }
     
-    fireProjectileInDirection(angleOffset) {
-        // Calculate angle (boss angle + offset)
-        const baseAngle = this.sprite.rotation;
-        const angle = baseAngle + Phaser.Math.DegToRad(angleOffset);
-        
-        // Create projectile with offset from boss center (accounting for larger boss size)
-        const offsetDistance = 80; // Increased offset for larger boss
+    fireProjectileInDirection(angle) {
+        // Create projectile with offset from boss center
+        const offsetDistance = 80; // Offset from boss center
         const offsetX = Math.cos(angle) * offsetDistance;
         const offsetY = Math.sin(angle) * offsetDistance;
         
+        // Get position for the projectile
+        const projectileX = this.sprite.x + offsetX;
+        const projectileY = this.sprite.y + offsetY;
+        
+        // Create the projectile
         const projectile = this.scene.physics.add.sprite(
-            this.sprite.x + offsetX,
-            this.sprite.y + offsetY,
+            projectileX,
+            projectileY,
             'bullet'
         );
         
         // Set projectile properties
-        projectile.setTint(0xff0000);
-        projectile.setScale(2.0); // Larger projectiles (was 1.5)
+        projectile.setTint(0xffff00); // Yellow color
+        projectile.setScale(2.0); // Make it visible but not too big
         projectile.setDepth(5);
         projectile.isBossProjectile = true;
         
         // Set velocity based on angle
-        const speed = 350; // Faster projectiles (was 300)
+        const speed = 300; // Slightly slower than player bullets for better visibility
         const vx = Math.cos(angle) * speed;
         const vy = Math.sin(angle) * speed;
         projectile.setVelocity(vx, vy);
@@ -160,30 +125,11 @@ class Boss extends Enemy {
         // Add to physics group for collision detection
         this.scene.bossProjectiles.add(projectile);
         
-        // Set lifespan (longer to travel further)
-        this.scene.time.delayedCall(3000, () => {
-            if (projectile.active) {
-                projectile.destroy();
-            }
-        });
+        // Set lifespan
+        projectile.lifespan = 2000; // 2 seconds lifespan
         
-        // Add more dramatic visual effects
-        this.scene.tweens.add({
-            targets: projectile,
-            alpha: { from: 0.8, to: 1 },
-            duration: 100,
-            yoyo: true,
-            repeat: -1
-        });
-        
-        // Add pulsing scale effect
-        this.scene.tweens.add({
-            targets: projectile,
-            scale: { from: 2.0, to: 2.3 },
-            duration: 200,
-            yoyo: true,
-            repeat: -1
-        });
+        // Add a simple glow effect
+        projectile.setBlendMode(Phaser.BlendModes.ADD);
     }
     
     speakRandomDialogue() {
