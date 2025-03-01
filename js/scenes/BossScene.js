@@ -178,10 +178,13 @@ class BossScene extends Phaser.Scene {
     handlePlayerProjectileCollision(player, projectile) {
         // Player takes damage from projectile
         if (this.player) {
-            this.player.takeDamage(10);
+            this.player.takeDamage(25); // Increased from 10 to 25 for more challenge
             
             // Add collision effect
             this.addCollisionEffect(projectile.x, projectile.y);
+            
+            // Add screen shake effect for more impact
+            this.cameras.main.shake(200, 0.01);
             
             // Destroy projectile
             projectile.destroy();

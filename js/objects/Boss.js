@@ -7,15 +7,15 @@ class Boss extends Enemy {
         super(scene, x, y, 'enemy-car');
         
         // Override enemy properties for boss
-        this.sprite.setScale(2.0); // Make boss bigger
-        this.speed = 80; // Slower than regular enemies
-        this.health = 50; // Much more health
-        this.maxHealth = 50;
-        this.damage = 30; // More damage on collision
-        this.scoreValue = 5000; // Big score reward
+        this.sprite.setScale(4.0); // Make boss much bigger (4x instead of 2x)
+        this.speed = 60; // Slower than regular enemies
+        this.health = 300; // Much more health (increased from 50 to 300)
+        this.maxHealth = 300;
+        this.damage = 40; // More damage on collision
+        this.scoreValue = 10000; // Big score reward
         this.active = true;
         this.lastProjectileTime = 0;
-        this.projectileCooldown = 2000; // ms between projectile volleys
+        this.projectileCooldown = 1000; // ms between projectile volleys (reduced from 2000ms)
         this.dialogueCooldown = 8000; // ms between dialogue messages
         this.lastDialogueTime = 0;
         this.healthThresholds = [0.8, 0.6, 0.4, 0.2]; // Trigger dialogue at these health percentages
@@ -84,18 +84,47 @@ class Boss extends Enemy {
         // Determine projectile pattern based on health
         const healthPercent = this.health / this.maxHealth;
         
-        if (healthPercent > 0.7) {
-            // Phase 1: Simple forward projectiles
-            this.fireProjectileInDirection(0);
-        } else if (healthPercent > 0.4) {
-            // Phase 2: Three-way spread
-            this.fireProjectileInDirection(-30);
-            this.fireProjectileInDirection(0);
-            this.fireProjectileInDirection(30);
-        } else {
-            // Phase 3: All directions
-            for (let angle = 0; angle < 360; angle += 45) {
-                this.fireProjectileInDirection(angle);
+        // Always fire at least one projectile directly at the player
+        if (this.scene.player && this.scene.player.sprite.active) {
+            // Calculate angle to player for accurate targeting
+            const dx = this.scene.player.sprite.x - this.sprite.x;
+            const dy = this.scene.player.sprite.y - this.sprite.y;
+            const angleToPlayer = Math.atan2(dy, dx);
+            
+            // Convert to degrees for easier manipulation
+            const angleToPlayerDeg = Phaser.Math.RadToDeg(angleToPlayer);
+            
+            // Always fire at least one projectile directly at the player
+            this.fireProjectileInDirection(angleToPlayerDeg);
+            
+            // Add additional projectiles based on health phase
+            if (healthPercent > 0.7) {
+                // Phase 1: Simple spread (3 projectiles)
+                this.fireProjectileInDirection(angleToPlayerDeg - 20);
+                this.fireProjectileInDirection(angleToPlayerDeg + 20);
+            } else if (healthPercent > 0.4) {
+                // Phase 2: Five-way spread + side shots
+                this.fireProjectileInDirection(angleToPlayerDeg - 30);
+                this.fireProjectileInDirection(angleToPlayerDeg - 15);
+                this.fireProjectileInDirection(angleToPlayerDeg + 15);
+                this.fireProjectileInDirection(angleToPlayerDeg + 30);
+                
+                // Side shots perpendicular to player direction
+                this.fireProjectileInDirection(angleToPlayerDeg + 90);
+                this.fireProjectileInDirection(angleToPlayerDeg - 90);
+            } else {
+                // Phase 3: All directions + spiral pattern
+                // Spiral pattern (8 projectiles in a spiral)
+                for (let i = 0; i < 8; i++) {
+                    const spiralAngle = angleToPlayerDeg + (i * 45);
+                    this.fireProjectileInDirection(spiralAngle);
+                }
+                
+                // Add random scattered shots for extra challenge
+                for (let i = 0; i < 4; i++) {
+                    const randomAngle = Phaser.Math.Between(0, 360);
+                    this.fireProjectileInDirection(randomAngle);
+                }
             }
         }
     }
@@ -105,21 +134,25 @@ class Boss extends Enemy {
         const baseAngle = this.sprite.rotation;
         const angle = baseAngle + Phaser.Math.DegToRad(angleOffset);
         
-        // Create projectile
+        // Create projectile with offset from boss center (accounting for larger boss size)
+        const offsetDistance = 80; // Increased offset for larger boss
+        const offsetX = Math.cos(angle) * offsetDistance;
+        const offsetY = Math.sin(angle) * offsetDistance;
+        
         const projectile = this.scene.physics.add.sprite(
-            this.sprite.x,
-            this.sprite.y,
+            this.sprite.x + offsetX,
+            this.sprite.y + offsetY,
             'bullet'
         );
         
         // Set projectile properties
         projectile.setTint(0xff0000);
-        projectile.setScale(1.5);
+        projectile.setScale(2.0); // Larger projectiles (was 1.5)
         projectile.setDepth(5);
         projectile.isBossProjectile = true;
         
         // Set velocity based on angle
-        const speed = 300;
+        const speed = 350; // Faster projectiles (was 300)
         const vx = Math.cos(angle) * speed;
         const vy = Math.sin(angle) * speed;
         projectile.setVelocity(vx, vy);
@@ -127,17 +160,26 @@ class Boss extends Enemy {
         // Add to physics group for collision detection
         this.scene.bossProjectiles.add(projectile);
         
-        // Set lifespan
-        this.scene.time.delayedCall(2000, () => {
+        // Set lifespan (longer to travel further)
+        this.scene.time.delayedCall(3000, () => {
             if (projectile.active) {
                 projectile.destroy();
             }
         });
         
-        // Add visual effect
+        // Add more dramatic visual effects
         this.scene.tweens.add({
             targets: projectile,
             alpha: { from: 0.8, to: 1 },
+            duration: 100,
+            yoyo: true,
+            repeat: -1
+        });
+        
+        // Add pulsing scale effect
+        this.scene.tweens.add({
+            targets: projectile,
+            scale: { from: 2.0, to: 2.3 },
             duration: 200,
             yoyo: true,
             repeat: -1
@@ -193,32 +235,55 @@ class Boss extends Enemy {
         // Create health bar background
         this.healthBarBg = this.scene.add.rectangle(
             this.sprite.x,
-            this.sprite.y - 50,
-            100,
-            10,
+            this.sprite.y - 100, // Position higher above the larger boss
+            200, // Wider health bar (was 100)
+            20, // Taller health bar (was 10)
             0x000000,
-            0.7
+            0.8
         ).setDepth(15);
         
         // Create health bar
         this.healthBar = this.scene.add.rectangle(
-            this.sprite.x - 50,
-            this.sprite.y - 50,
-            100,
-            10,
+            this.sprite.x - 100, // Adjusted for wider bar
+            this.sprite.y - 100, // Position higher above the larger boss
+            200, // Wider health bar (was 100)
+            20, // Taller health bar (was 10)
             0xff0000,
             1
         ).setOrigin(0, 0.5).setDepth(16);
+        
+        // Add health text
+        this.healthText = this.scene.add.text(
+            this.sprite.x,
+            this.sprite.y - 100,
+            'BOSS',
+            {
+                font: 'bold 14px Arial',
+                fill: '#ffffff',
+                stroke: '#000000',
+                strokeThickness: 4
+            }
+        ).setOrigin(0.5).setDepth(17);
     }
     
     updateHealthBar() {
         // Update health bar position
-        this.healthBarBg.setPosition(this.sprite.x, this.sprite.y - 50);
-        this.healthBar.setPosition(this.sprite.x - 50, this.sprite.y - 50);
+        this.healthBarBg.setPosition(this.sprite.x, this.sprite.y - 100);
+        this.healthBar.setPosition(this.sprite.x - 100, this.sprite.y - 100);
+        this.healthText.setPosition(this.sprite.x, this.sprite.y - 100);
         
         // Update health bar width
         const healthPercent = this.health / this.maxHealth;
-        this.healthBar.width = 100 * healthPercent;
+        this.healthBar.width = 200 * healthPercent;
+        
+        // Update health bar color based on health percentage
+        if (healthPercent < 0.3) {
+            this.healthBar.fillColor = 0xff0000; // Red when low health
+        } else if (healthPercent < 0.6) {
+            this.healthBar.fillColor = 0xff8800; // Orange when medium health
+        } else {
+            this.healthBar.fillColor = 0xff0000; // Red when high health (boss is always red)
+        }
     }
     
     takeDamage(amount) {
@@ -228,7 +293,16 @@ class Boss extends Enemy {
         // Update health bar
         if (this.active) {
             const healthPercent = this.health / this.maxHealth;
-            this.healthBar.width = 100 * healthPercent;
+            this.healthBar.width = 200 * healthPercent; // Updated to match the new width (200 instead of 100)
+            
+            // Update health bar color based on health percentage
+            if (healthPercent < 0.3) {
+                this.healthBar.fillColor = 0xff0000; // Red when low health
+            } else if (healthPercent < 0.6) {
+                this.healthBar.fillColor = 0xff8800; // Orange when medium health
+            } else {
+                this.healthBar.fillColor = 0xff0000; // Red when high health (boss is always red)
+            }
         }
     }
     
@@ -239,6 +313,9 @@ class Boss extends Enemy {
         }
         if (this.healthBar) {
             this.healthBar.destroy();
+        }
+        if (this.healthText) {
+            this.healthText.destroy();
         }
         
         // Call parent destroy method
@@ -253,32 +330,62 @@ class Boss extends Enemy {
     
     createBossExplosion() {
         // Create multiple explosion effects for a more dramatic effect
-        for (let i = 0; i < 5; i++) {
-            // Random position within boss area
-            const offsetX = Phaser.Math.Between(-30, 30);
-            const offsetY = Phaser.Math.Between(-30, 30);
+        for (let i = 0; i < 12; i++) { // Increased from 5 to 12 explosions
+            // Random position within boss area (larger area for bigger boss)
+            const offsetX = Phaser.Math.Between(-80, 80); // Increased from -30/30
+            const offsetY = Phaser.Math.Between(-80, 80); // Increased from -30/30
             
             // Create explosion with delay
-            this.scene.time.delayedCall(i * 300, () => {
+            this.scene.time.delayedCall(i * 200, () => { // Faster sequence (300ms to 200ms)
                 const explosion = this.scene.add.particles(
                     this.sprite.x + offsetX,
                     this.sprite.y + offsetY,
                     'bullet',
                     {
-                        speed: { min: 50, max: 200 },
-                        scale: { start: 2, end: 0 },
-                        lifespan: 1000,
+                        speed: { min: 80, max: 250 }, // Faster particles
+                        scale: { start: 3, end: 0 }, // Larger particles
+                        lifespan: 1500, // Longer lifespan
                         blendMode: 'ADD',
                         tint: [0xff0000, 0xff8800, 0xffff00],
-                        quantity: 30
+                        quantity: 50 // More particles
                     }
                 );
                 
+                // Add camera shake for dramatic effect
+                if (i % 3 === 0) { // Every third explosion
+                    this.scene.cameras.main.shake(300, 0.015);
+                }
+                
                 // Auto-destroy particles after animation completes
-                this.scene.time.delayedCall(1000, () => {
+                this.scene.time.delayedCall(1500, () => {
                     explosion.destroy();
                 });
             });
         }
+        
+        // Add a final, massive explosion at the end
+        this.scene.time.delayedCall(2500, () => {
+            const finalExplosion = this.scene.add.particles(
+                this.sprite.x,
+                this.sprite.y,
+                'bullet',
+                {
+                    speed: { min: 100, max: 300 },
+                    scale: { start: 5, end: 0 },
+                    lifespan: 2000,
+                    blendMode: 'ADD',
+                    tint: [0xff0000, 0xffffff],
+                    quantity: 100
+                }
+            );
+            
+            // Strong camera shake for final explosion
+            this.scene.cameras.main.shake(500, 0.03);
+            
+            // Auto-destroy particles after animation completes
+            this.scene.time.delayedCall(2000, () => {
+                finalExplosion.destroy();
+            });
+        });
     }
 }
