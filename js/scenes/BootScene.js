@@ -77,6 +77,16 @@ class BootScene extends Phaser.Scene {
         this.load.image('black-church', 'assets/images/black-church.png');
         this.load.image('button', 'assets/images/button.png');
         
+        // Load new weapon images
+        this.load.image('rocket', 'assets/images/weapons/rocket.png');
+        this.load.image('laser', 'assets/images/weapons/laser.png');
+        this.load.image('explosion', 'assets/images/weapons/explosion.png');
+        
+        // Load new enemy images
+        this.load.image('fast-car', 'assets/images/enemies/fast-car.png');
+        this.load.image('tank', 'assets/images/enemies/tank.png');
+        this.load.image('shooter', 'assets/images/enemies/shooter.png');
+        
         // Load sounds
         this.load.audio('engine', 'assets/sounds/engine.mp3');
         this.load.audio('crash', 'assets/sounds/crash.mp3');
@@ -85,6 +95,11 @@ class BootScene extends Phaser.Scene {
         this.load.audio('menu-music', 'assets/sounds/menu-music.mp3');
         this.load.audio('game-music', 'assets/sounds/game-music.mp3');
         this.load.audio('intro-music', 'assets/sounds/menu-music.mp3'); // Temporarily using menu music for intro
+        
+        // Load new weapon sounds
+        this.load.audio('rocket-launch', 'assets/sounds/shoot.mp3'); // Temporarily using shoot sound
+        this.load.audio('explosion', 'assets/sounds/crash.mp3');     // Temporarily using crash sound
+        this.load.audio('laser', 'assets/sounds/shoot.mp3');         // Temporarily using shoot sound
     }
 
     create() {
@@ -135,6 +150,16 @@ class BootScene extends Phaser.Scene {
         createPlaceholder('black-church', 150, 200, 0x34495e);
         createPlaceholder('button', 200, 50, 0x3498db);
         
+        // Create placeholders for new weapons
+        createPlaceholder('rocket', 10, 20, 0xe74c3c);  // Red rocket
+        createPlaceholder('laser', 5, 30, 0x3498db);    // Blue laser
+        createPlaceholder('explosion', 50, 50, 0xf39c12); // Orange explosion
+        
+        // Create placeholders for new enemies
+        createPlaceholder('fast-car', 35, 60, 0xf1c40f);  // Yellow fast car
+        createPlaceholder('tank', 60, 80, 0x8e44ad);      // Purple tank
+        createPlaceholder('shooter', 45, 45, 0x16a085);   // Teal shooter
+        
         // Create placeholder sounds (empty audio files)
         const createEmptySound = (key) => {
             if (!this.cache.audio.exists(key)) {
@@ -149,5 +174,10 @@ class BootScene extends Phaser.Scene {
         createEmptySound('menu-music');
         createEmptySound('game-music');
         createEmptySound('intro-music');
+        
+        // Create empty sounds for new weapons
+        createEmptySound('rocket-launch');
+        createEmptySound('explosion');
+        createEmptySound('laser');
     }
 }

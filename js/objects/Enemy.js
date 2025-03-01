@@ -14,18 +14,49 @@ class Enemy {
         // Store reference to this enemy in the sprite
         this.sprite.enemyRef = this;
         
-        // Enemy properties
-        this.speed = type === 'drone' ? 100 : 150;
-        this.health = type === 'drone' ? 1 : 3;
-        this.damage = type === 'drone' ? 10 : 20;
-        this.scoreValue = type === 'drone' ? 50 : 100;
+        // Enemy properties based on type
         this.active = true;
         
-        // Set up behavior based on type
-        if (type === 'drone') {
-            this.setupDrone();
-        } else {
-            this.setupCar();
+        // Set up properties and behavior based on type
+        switch (type) {
+            case 'drone':
+                this.speed = 100;
+                this.health = 1;
+                this.damage = 10;
+                this.scoreValue = 50;
+                this.setupDrone();
+                break;
+            case 'fast-car':
+                this.speed = 250;
+                this.health = 2;
+                this.damage = 15;
+                this.scoreValue = 150;
+                this.setupFastCar();
+                break;
+            case 'tank':
+                this.speed = 100;
+                this.health = 8;
+                this.damage = 30;
+                this.scoreValue = 200;
+                this.setupTank();
+                break;
+            case 'shooter':
+                this.speed = 120;
+                this.health = 4;
+                this.damage = 15;
+                this.scoreValue = 175;
+                this.canShoot = true;
+                this.shootCooldown = 2000; // ms
+                this.lastShot = 0;
+                this.setupShooter();
+                break;
+            default: // Regular enemy car
+                this.speed = 150;
+                this.health = 3;
+                this.damage = 20;
+                this.scoreValue = 100;
+                this.setupCar();
+                break;
         }
     }
     
@@ -66,6 +97,61 @@ class Enemy {
         
         // Set initial angle towards player
         this.updateAngle();
+    }
+    
+    setupFastCar() {
+        // Fast cars are smaller and quicker
+        this.sprite.setScale(0.9);
+        //this.sprite.setTint(0xf1c40f); // Yellow tint
+        
+        // Set initial angle towards player
+        this.updateAngle();
+    }
+    
+    setupTank() {
+        // Tanks are larger and slower but have more health
+        this.sprite.setScale(1.3);
+        //this.sprite.setTint(0x8e44ad); // Purple tint
+        
+        // Set initial angle towards player
+        this.updateAngle();
+    }
+    
+    setupShooter() {
+        // Shooter enemies stay at a distance and shoot projectiles
+        this.sprite.setScale(1);
+        //this.sprite.setTint(0x16a085); // Teal tint
+        
+        // Create bullets group
+        this.bullets = this.scene.physics.add.group({
+            defaultKey: 'bullet',
+            maxSize: 5
+        });
+        
+        // Add collision between player and shooter bullets
+        if (this.scene.player) {
+            this.scene.physics.add.overlap(
+                this.scene.player.sprite,
+                this.bullets,
+                this.handleBulletPlayerCollision,
+                null,
+                this
+            );
+        }
+        
+        // Set initial angle towards player
+        this.updateAngle();
+    }
+    
+    handleBulletPlayerCollision(player, bullet) {
+        // Deactivate bullet
+        bullet.setActive(false);
+        bullet.setVisible(false);
+        
+        // Player takes damage
+        if (this.scene.player) {
+            this.scene.player.takeDamage(1);
+        }
     }
     
     changeDirection() {
@@ -115,50 +201,170 @@ class Enemy {
                 return;
             }
             
-            if (this.type === 'enemy-car') {
-                // Update car angle to chase player
-                this.updateAngle();
-            } else if (this.type === 'drone') {
-                // Drone behavior: attack only when player is within detection radius
-                if (distance <= this.detectionRadius && !this.isAttacking) {
-                    // Switch to attack mode
-                    this.isAttacking = true;
-                    this.speed = this.attackSpeed;
+            // Handle behavior based on enemy type
+            switch (this.type) {
+                case 'enemy-car':
+                    // Regular car: chase player directly
+                    this.updateAngle();
+                    break;
                     
-                    // Clear the random movement timer
-                    if (this.movementTimer) {
-                        this.movementTimer.remove();
-                        this.movementTimer = null;
-                    }
+                case 'fast-car':
+                    // Fast car: chase player with occasional speed bursts
+                    this.updateAngle();
                     
-                    // Add visual indicator that drone is in attack mode
-                    this.sprite.setTint(0xff0000);
-                } else if (distance > this.detectionRadius && this.isAttacking) {
-                    // Switch back to idle mode
-                    this.isAttacking = false;
-                    this.speed = this.idleSpeed;
-                    
-                    // Restore random movement if timer was removed
-                    if (!this.movementTimer) {
-                        this.movementTimer = this.scene.time.addEvent({
-                            delay: 3000,
-                            callback: this.changeDirection,
-                            callbackScope: this,
-                            loop: true
+                    // Random speed bursts
+                    if (Math.random() < 0.01) { // 1% chance per frame
+                        this.scene.tweens.add({
+                            targets: this,
+                            speed: { from: this.speed, to: this.speed * 1.5 },
+                            duration: 500,
+                            yoyo: true,
+                            onUpdate: () => {
+                                this.updateAngle(); // Update velocity with new speed
+                            }
                         });
-                        this.changeDirection();
+                    }
+                    break;
+                    
+                case 'tank':
+                    // Tank: slower but relentless pursuit
+                    this.updateAngle();
+                    break;
+                    
+                case 'shooter':
+                    // Shooter: maintain distance and shoot
+                    const optimalDistance = 300;
+                    
+                    if (distance < optimalDistance - 50) {
+                        // Too close, back away
+                        const angle = Math.atan2(
+                            this.sprite.y - this.scene.player.sprite.y,
+                            this.sprite.x - this.scene.player.sprite.x
+                        );
+                        this.sprite.rotation = angle;
+                        const vx = Math.cos(angle) * this.speed * 0.5;
+                        const vy = Math.sin(angle) * this.speed * 0.5;
+                        this.sprite.setVelocity(vx, vy);
+                    } else if (distance > optimalDistance + 50) {
+                        // Too far, get closer
+                        this.updateAngle();
+                    } else {
+                        // At good distance, stop and face player
+                        this.sprite.setVelocity(0, 0);
+                        const angle = Math.atan2(
+                            this.scene.player.sprite.y - this.sprite.y,
+                            this.scene.player.sprite.x - this.sprite.x
+                        );
+                        this.sprite.rotation = angle;
+                        
+                        // Shoot at player if cooldown has passed
+                        const currentTime = this.scene.time.now;
+                        if (currentTime > this.lastShot + this.shootCooldown) {
+                            this.shootAtPlayer();
+                            this.lastShot = currentTime;
+                        }
+                    }
+                    break;
+                    
+                case 'drone':
+                    // Drone behavior: attack only when player is within detection radius
+                    if (distance <= this.detectionRadius && !this.isAttacking) {
+                        // Switch to attack mode
+                        this.isAttacking = true;
+                        this.speed = this.attackSpeed;
+                        
+                        // Clear the random movement timer
+                        if (this.movementTimer) {
+                            this.movementTimer.remove();
+                            this.movementTimer = null;
+                        }
+                        
+                        // Add visual indicator that drone is in attack mode
+                        this.sprite.setTint(0xff0000);
+                    } else if (distance > this.detectionRadius && this.isAttacking) {
+                        // Switch back to idle mode
+                        this.isAttacking = false;
+                        this.speed = this.idleSpeed;
+                        
+                        // Restore random movement if timer was removed
+                        if (!this.movementTimer) {
+                            this.movementTimer = this.scene.time.addEvent({
+                                delay: 3000,
+                                callback: this.changeDirection,
+                                callbackScope: this,
+                                loop: true
+                            });
+                            this.changeDirection();
+                        }
+                        
+                        // Remove attack tint
+                        this.sprite.clearTint();
                     }
                     
-                    // Remove attack tint
-                    this.sprite.clearTint();
-                }
-                
-                // Update drone movement based on current mode
-                if (this.isAttacking) {
-                    this.updateAngle(); // Chase player when attacking
-                }
+                    // Update drone movement based on current mode
+                    if (this.isAttacking) {
+                        this.updateAngle(); // Chase player when attacking
+                    }
+                    break;
+            }
+            
+            // Update bullets for shooter enemies
+            if (this.type === 'shooter' && this.bullets) {
+                this.updateBullets();
             }
         }
+    }
+    
+    shootAtPlayer() {
+        if (!this.scene.player || !this.scene.player.sprite.active) return;
+        
+        // Get bullet from pool
+        const bullet = this.bullets.get();
+        if (bullet) {
+            // Set bullet position and angle
+            const angle = this.sprite.rotation;
+            const offsetX = Math.cos(angle) * 30;
+            const offsetY = Math.sin(angle) * 30;
+            
+            bullet.setActive(true);
+            bullet.setVisible(true);
+            bullet.setPosition(this.sprite.x + offsetX, this.sprite.y + offsetY);
+            bullet.setRotation(angle);
+            
+            // Set bullet velocity
+            const bulletSpeed = 300;
+            const vx = Math.cos(angle) * bulletSpeed;
+            const vy = Math.sin(angle) * bulletSpeed;
+            
+            bullet.setVelocity(vx, vy);
+            
+            // Set bullet lifespan
+            bullet.lifespan = 1500;
+            
+            // Set bullet tint
+            bullet.setTint(0x16a085); // Teal to match shooter
+            
+            // Play shoot sound
+            if (this.scene.sound.get('shoot')) {
+                const shootSound = this.scene.sound.get('shoot');
+                shootSound.setVolume(0.2);
+                shootSound.play();
+            }
+        }
+    }
+    
+    updateBullets() {
+        // Update bullet lifespan and remove expired bullets
+        this.bullets.getChildren().forEach(bullet => {
+            if (bullet.active) {
+                bullet.lifespan -= 16; // Approximate ms per frame
+                
+                if (bullet.lifespan <= 0) {
+                    bullet.setActive(false);
+                    bullet.setVisible(false);
+                }
+            }
+        });
     }
     
     takeDamage(amount) {
@@ -252,6 +458,11 @@ class Enemy {
         // Clear timers
         if (this.movementTimer) {
             this.movementTimer.remove();
+        }
+        
+        // Clean up bullets for shooter enemies
+        if (this.type === 'shooter' && this.bullets) {
+            this.bullets.clear(true, true);
         }
         
         // Destroy sprite

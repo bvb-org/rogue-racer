@@ -24,6 +24,47 @@ class Player {
         this.invulnerableTime = 1000; // ms
         this.isOnGrass = false; // Flag to track if player is on grass
         
+        // Weapon system
+        this.weapons = {
+            bullet: {
+                name: 'Pistol',
+                damage: 1,
+                fireRate: 300 / scene.game.gameState.playerStats.fireRate,
+                projectileSpeed: 500,
+                projectileLifespan: 1000,
+                projectileKey: 'bullet',
+                sound: 'shoot',
+                unlocked: true
+            },
+            rocket: {
+                name: 'Rachetă',
+                damage: 3,
+                fireRate: 1000,
+                projectileSpeed: 300,
+                projectileLifespan: 1500,
+                projectileKey: 'rocket',
+                sound: 'rocket-launch',
+                explosionRadius: 100,
+                unlocked: scene.game.gameState.currentCity !== 'Bucharest' // Unlocked after first city
+            },
+            laser: {
+                name: 'Laser',
+                damage: 2,
+                fireRate: 200,
+                projectileSpeed: 800,
+                projectileLifespan: 800,
+                projectileKey: 'laser',
+                sound: 'laser',
+                unlocked: scene.game.gameState.currentCity === 'Cluj-Napoca' ||
+                          scene.game.gameState.currentCity === 'Timisoara' ||
+                          scene.game.gameState.currentCity === 'Iasi' ||
+                          scene.game.gameState.currentCity === 'Vaslui' // Unlocked in later cities
+            }
+        };
+        
+        // Current weapon
+        this.currentWeapon = 'bullet';
+        
         // Shockwave ability properties
         this.shockwaveUnlocked = false; // Will be set to true after first city is completed
         this.shockwaveCooldown = 10000; // 10 seconds cooldown
@@ -77,6 +118,11 @@ class Player {
         this.spaceKey = scene.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.SPACE);
         this.shockwaveKey = scene.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.C);
         
+        // Weapon switching keys
+        this.key1 = scene.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.ONE);
+        this.key2 = scene.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.TWO);
+        this.key3 = scene.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.THREE);
+        
         // Create health bar
         this.createHealthBar();
         
@@ -90,6 +136,9 @@ class Player {
     update(time, delta) {
         // Handle movement
         this.handleMovement();
+        
+        // Handle weapon switching
+        this.handleWeaponSwitching();
         
         // Handle shooting
         this.handleShooting(time);
@@ -105,6 +154,26 @@ class Player {
         
         // Update UI
         this.updateUI();
+    }
+    
+    handleWeaponSwitching() {
+        // Switch to pistol (default weapon)
+        if (this.key1.isDown && this.currentWeapon !== 'bullet') {
+            this.currentWeapon = 'bullet';
+            this.scene.showMessage(`Armă: ${this.weapons.bullet.name}`);
+        }
+        
+        // Switch to rocket launcher if unlocked
+        if (this.key2.isDown && this.weapons.rocket.unlocked && this.currentWeapon !== 'rocket') {
+            this.currentWeapon = 'rocket';
+            this.scene.showMessage(`Armă: ${this.weapons.rocket.name}`);
+        }
+        
+        // Switch to laser if unlocked
+        if (this.key3.isDown && this.weapons.laser.unlocked && this.currentWeapon !== 'laser') {
+            this.currentWeapon = 'laser';
+            this.scene.showMessage(`Armă: ${this.weapons.laser.name}`);
+        }
     }
     
     handleShockwave(time) {
@@ -344,41 +413,107 @@ class Player {
     }
     
     handleShooting(time) {
+        // Get current weapon config
+        const weapon = this.weapons[this.currentWeapon];
+        
+        // Check if player can shoot
         if (this.spaceKey.isDown && time > this.lastFired && this.ammo > 0) {
-            // Create bullet
-            const bullet = this.bullets.get();
+            // Create projectile
+            const projectile = this.bullets.get();
             
-            if (bullet) {
-                // Set bullet position and angle
+            if (projectile) {
+                // Set projectile texture based on weapon type
+                projectile.setTexture(weapon.projectileKey);
+                
+                // Set projectile position and angle
                 const angle = Phaser.Math.DegToRad(this.sprite.angle - 90);
                 const offsetX = Math.cos(angle) * 30;
                 const offsetY = Math.sin(angle) * 30;
                 
-                bullet.setActive(true);
-                bullet.setVisible(true);
-                bullet.setPosition(this.sprite.x + offsetX, this.sprite.y + offsetY);
-                bullet.setRotation(angle);
+                projectile.setActive(true);
+                projectile.setVisible(true);
+                projectile.setPosition(this.sprite.x + offsetX, this.sprite.y + offsetY);
+                projectile.setRotation(angle);
                 
-                // Set bullet velocity
-                const bulletSpeed = 500;
-                const vx = Math.cos(angle) * bulletSpeed;
-                const vy = Math.sin(angle) * bulletSpeed;
+                // Set projectile velocity
+                const vx = Math.cos(angle) * weapon.projectileSpeed;
+                const vy = Math.sin(angle) * weapon.projectileSpeed;
                 
-                bullet.setVelocity(vx, vy);
+                projectile.setVelocity(vx, vy);
                 
-                // Set bullet lifespan
-                bullet.lifespan = 1000;
+                // Set projectile properties
+                projectile.lifespan = weapon.projectileLifespan;
+                projectile.damage = weapon.damage;
+                projectile.weaponType = this.currentWeapon;
                 
-                // Play shoot sound
-                this.shootSound.play();
+                // Special properties for rockets
+                if (this.currentWeapon === 'rocket') {
+                    projectile.explosionRadius = weapon.explosionRadius;
+                    
+                    // Make rockets larger
+                    projectile.setScale(1.5);
+                    
+                    // Add trail effect for rockets
+                    this.createRocketTrail(projectile);
+                }
+                
+                // Special properties for lasers
+                if (this.currentWeapon === 'laser') {
+                    // Make lasers longer and thinner
+                    projectile.setScale(1, 2);
+                    
+                    // Add glow effect for lasers
+                    projectile.setTint(0x3498db);
+                }
+                
+                // Play appropriate sound
+                if (weapon.sound === 'shoot') {
+                    this.shootSound.play();
+                } else {
+                    // Use the existing sound but modify it
+                    const weaponSound = this.scene.sound.get(weapon.sound);
+                    if (weaponSound) {
+                        weaponSound.play();
+                    } else {
+                        this.shootSound.play();
+                    }
+                }
                 
                 // Update last fired time
-                this.lastFired = time + this.fireRate;
+                this.lastFired = time + weapon.fireRate;
                 
                 // Decrease ammo
                 this.ammo--;
             }
         }
+    }
+    
+    createRocketTrail(rocket) {
+        // Create a particle emitter for the rocket trail
+        const particles = this.scene.add.particles(rocket.x, rocket.y, 'bullet', {
+            speed: { min: 10, max: 50 },
+            scale: { start: 0.5, end: 0 },
+            lifespan: 300,
+            blendMode: 'ADD',
+            tint: 0xf39c12,
+            follow: rocket,
+            followOffset: { x: -10, y: 0 },
+            rotate: { min: 0, max: 360 },
+            quantity: 1
+        });
+        
+        // Store reference to particles in rocket for cleanup
+        rocket.particles = particles;
+        
+        // Set up cleanup when rocket is deactivated
+        const originalDeactivate = rocket.setActive;
+        rocket.setActive = function(value) {
+            originalDeactivate.call(this, value);
+            if (!value && this.particles) {
+                this.particles.destroy();
+                this.particles = null;
+            }
+        };
     }
     
     updateBullets() {
@@ -387,11 +522,77 @@ class Player {
             if (bullet.active) {
                 bullet.lifespan -= 16; // Approximate ms per frame
                 
+                // Special behavior for rockets
+                if (bullet.weaponType === 'rocket') {
+                    // Add slight wobble to rocket trajectory
+                    const wobble = Math.sin(this.scene.time.now / 100) * 0.5;
+                    bullet.body.velocity.x += wobble;
+                    bullet.body.velocity.y += wobble;
+                }
+                
+                // Special behavior for lasers
+                if (bullet.weaponType === 'laser') {
+                    // Add pulsing effect to lasers
+                    const pulse = (Math.sin(this.scene.time.now / 50) + 1) / 2;
+                    bullet.setAlpha(0.7 + pulse * 0.3);
+                }
+                
+                // Handle bullet expiration
                 if (bullet.lifespan <= 0) {
+                    // Special explosion for rockets
+                    if (bullet.weaponType === 'rocket') {
+                        this.createRocketExplosion(bullet.x, bullet.y, bullet.explosionRadius);
+                    }
+                    
                     bullet.setActive(false);
                     bullet.setVisible(false);
                 }
             }
+        });
+    }
+    
+    createRocketExplosion(x, y, radius) {
+        // Create visual explosion effect
+        const explosion = this.scene.add.particles(x, y, 'explosion', {
+            speed: { min: 50, max: 200 },
+            scale: { start: 1, end: 0 },
+            lifespan: 800,
+            blendMode: 'ADD',
+            tint: 0xf39c12,
+            quantity: 20
+        });
+        
+        // Play explosion sound
+        const explosionSound = this.scene.sound.get('explosion');
+        if (explosionSound) {
+            explosionSound.play();
+        }
+        
+        // Find all enemies within explosion radius
+        const enemiesHit = this.scene.enemiesArray.filter(enemy => {
+            if (!enemy.active) return false;
+            
+            const distance = Phaser.Math.Distance.Between(
+                x, y,
+                enemy.sprite.x, enemy.sprite.y
+            );
+            
+            return distance <= radius;
+        });
+        
+        // Damage all enemies within radius
+        enemiesHit.forEach(enemy => {
+            enemy.takeDamage(this.weapons.rocket.damage);
+            
+            // Add score for each enemy hit
+            if (enemy.health <= 0) {
+                this.scene.addScore(enemy.scoreValue);
+            }
+        });
+        
+        // Auto-destroy particles after animation completes
+        this.scene.time.delayedCall(800, () => {
+            explosion.destroy();
         });
     }
     

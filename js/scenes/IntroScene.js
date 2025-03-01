@@ -32,7 +32,7 @@ class IntroScene extends Phaser.Scene {
         }).setOrigin(0.5);
         
         // Backstory text with improved visibility (moved higher to avoid overlap with enemy car)
-        this.storyText = this.add.text(width / 2, 130, 'Fugi de CG și POT!\nÎncearcă să îi învingi și să ajungi la CT final.', {
+        this.storyText = this.add.text(width / 2, 130, 'Fugi de CG și prietenii săi!\nÎncearcă să îi învingi și să ajungi la CT final.', {
             font: '24px Arial',
             fill: '#ffffff',
             align: 'center',

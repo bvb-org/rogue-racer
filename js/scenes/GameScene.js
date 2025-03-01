@@ -139,75 +139,132 @@ class GameScene extends Phaser.Scene {
     }
     
     startEnemySpawning() {
-        // Determine spawn rates based on city
-        let carSpawnRate, droneSpawnRate;
+        // Determine spawn rates and enemy types based on city
+        let enemyTypes = [];
+        let spawnRates = {};
         
+        // Define enemy types and spawn rates for each city
         switch (this.currentCity) {
             case 'Bucharest':
-                carSpawnRate = 2500; // Halved from 5000 (double the cars)
-                droneSpawnRate = 21000; // Tripled from 7000 (1/3 of original drones)
+                // First city - basic enemies only
+                enemyTypes = ['enemy-car', 'drone'];
+                spawnRates = {
+                    'enemy-car': 2500,
+                    'drone': 21000
+                };
                 break;
+                
             case 'Brașov':
-                carSpawnRate = 2000; // Halved from 4000 (double the cars)
-                droneSpawnRate = 18000; // Tripled from 6000 (1/3 of original drones)
+                // Second city - introduce fast cars
+                enemyTypes = ['enemy-car', 'drone', 'fast-car'];
+                spawnRates = {
+                    'enemy-car': 2500,
+                    'drone': 18000,
+                    'fast-car': 4000
+                };
                 break;
+                
             case 'Cluj-Napoca':
-                carSpawnRate = 1500; // Halved from 3000 (double the cars)
-                droneSpawnRate = 15000; // Tripled from 5000 (1/3 of original drones)
+                // Third city - introduce tanks
+                enemyTypes = ['enemy-car', 'drone', 'fast-car', 'tank'];
+                spawnRates = {
+                    'enemy-car': 2500,
+                    'drone': 15000,
+                    'fast-car': 3500,
+                    'tank': 8000
+                };
                 break;
+                
             case 'Timisoara':
-                carSpawnRate = 1200; // More difficult than Cluj-Napoca
-                droneSpawnRate = 12000; // More drones than Cluj-Napoca
+                // Fourth city - introduce shooters
+                enemyTypes = ['enemy-car', 'drone', 'fast-car', 'tank', 'shooter'];
+                spawnRates = {
+                    'enemy-car': 2500,
+                    'drone': 12000,
+                    'fast-car': 3000,
+                    'tank': 7000,
+                    'shooter': 10000
+                };
                 break;
+                
             case 'Iasi':
-                carSpawnRate = 1000; // More difficult than Timisoara
-                droneSpawnRate = 9000; // More drones than Timisoara
+                // Fifth city - more difficult
+                enemyTypes = ['enemy-car', 'drone', 'fast-car', 'tank', 'shooter'];
+                spawnRates = {
+                    'enemy-car': 2000,
+                    'drone': 9000,
+                    'fast-car': 2500,
+                    'tank': 6000,
+                    'shooter': 8000
+                };
                 break;
+                
             case 'Vaslui':
-                carSpawnRate = 800; // Most difficult level
-                droneSpawnRate = 6000; // Most drones
+                // Final city - most difficult
+                enemyTypes = ['enemy-car', 'drone', 'fast-car', 'tank', 'shooter'];
+                spawnRates = {
+                    'enemy-car': 1800,
+                    'drone': 6000,
+                    'fast-car': 2000,
+                    'tank': 5000,
+                    'shooter': 6000
+                };
                 break;
+                
             default:
-                carSpawnRate = 2500; // Halved from 5000 (double the cars)
-                droneSpawnRate = 21000; // Tripled from 7000 (1/3 of original drones)
+                // Default to Bucharest settings
+                enemyTypes = ['enemy-car', 'drone'];
+                spawnRates = {
+                    'enemy-car': 2500,
+                    'drone': 21000
+                };
         }
         
-        // Start car spawning
-        this.carSpawnTimer = this.time.addEvent({
-            delay: carSpawnRate,
-            callback: () => {
-                if (!this.gameOver && this.player && this.player.sprite.active) {
-                    const enemy = Enemy.spawnEnemy(this, 'enemy-car');
-                    if (enemy) {
-                        this.enemiesArray.push(enemy);
-                        this.enemyGroup.add(enemy.sprite);
-                        this.enemies.add(enemy.sprite); // Add to the enemies group as well
+        // Create spawn timers for each enemy type
+        this.enemySpawnTimers = [];
+        
+        enemyTypes.forEach(enemyType => {
+            const timer = this.time.addEvent({
+                delay: spawnRates[enemyType],
+                callback: () => {
+                    if (!this.gameOver && this.player && this.player.sprite.active) {
+                        const enemy = Enemy.spawnEnemy(this, enemyType);
+                        if (enemy) {
+                            this.enemiesArray.push(enemy);
+                            this.enemyGroup.add(enemy.sprite);
+                            this.enemies.add(enemy.sprite);
+                        }
                     }
-                }
-            },
-            callbackScope: this,
-            loop: true
+                },
+                callbackScope: this,
+                loop: true
+            });
+            
+            this.enemySpawnTimers.push(timer);
         });
         
-        // Start drone spawning
-        this.droneSpawnTimer = this.time.addEvent({
-            delay: droneSpawnRate,
-            callback: () => {
-                if (!this.gameOver && this.player && this.player.sprite.active) {
-                    const enemy = Enemy.spawnEnemy(this, 'drone');
-                    if (enemy) {
-                        this.enemiesArray.push(enemy);
-                        this.enemyGroup.add(enemy.sprite);
-                        this.enemies.add(enemy.sprite); // Add to the enemies group as well
-                    }
-                }
-            },
-            callbackScope: this,
-            loop: true
-        });
+        // Show message about new enemy types
+        if (this.currentCity === 'Brașov') {
+            this.showMessage('Atenție! Mașini rapide în zonă!', 3000);
+        } else if (this.currentCity === 'Cluj-Napoca') {
+            this.showMessage('Atenție! Tancuri blindate în zonă!', 3000);
+        } else if (this.currentCity === 'Timisoara') {
+            this.showMessage('Atenție! Inamici cu arme în zonă!', 3000);
+        }
     }
     
     stopEnemySpawning() {
+        // Remove all enemy spawn timers
+        if (this.enemySpawnTimers && this.enemySpawnTimers.length > 0) {
+            this.enemySpawnTimers.forEach(timer => {
+                if (timer) {
+                    timer.remove();
+                }
+            });
+            this.enemySpawnTimers = [];
+        }
+        
+        // For backward compatibility
         if (this.carSpawnTimer) {
             this.carSpawnTimer.remove();
         }
@@ -241,14 +298,82 @@ class GameScene extends Phaser.Scene {
     }
     
     handleBulletEnemyCollision(bullet, enemy) {
+        // Get damage amount from bullet (set by player's weapon)
+        const damage = bullet.damage || 1;
+        
+        // Special handling for rocket explosions
+        if (bullet.weaponType === 'rocket') {
+            // Create explosion at impact point
+            this.createExplosion(bullet.x, bullet.y, bullet.explosionRadius || 100);
+            
+            // Find all enemies within explosion radius
+            const explosionRadius = bullet.explosionRadius || 100;
+            const enemiesInRadius = this.enemiesArray.filter(e => {
+                if (!e.active) return false;
+                
+                const distance = Phaser.Math.Distance.Between(
+                    bullet.x, bullet.y,
+                    e.sprite.x, e.sprite.y
+                );
+                
+                return distance <= explosionRadius;
+            });
+            
+            // Damage all enemies in radius
+            enemiesInRadius.forEach(e => {
+                e.takeDamage(damage);
+            });
+        } else {
+            // Standard bullet damage to single enemy
+            if (enemy.enemyRef) {
+                enemy.enemyRef.takeDamage(damage);
+            }
+        }
+        
         // Deactivate bullet
         bullet.setActive(false);
         bullet.setVisible(false);
+    }
+    
+    createExplosion(x, y, radius) {
+        // Create explosion visual effect
+        const explosion = this.add.particles(x, y, 'explosion', {
+            speed: { min: 50, max: 200 },
+            scale: { start: 1, end: 0 },
+            lifespan: 800,
+            blendMode: 'ADD',
+            tint: 0xf39c12,
+            quantity: 20
+        });
         
-        // Enemy takes damage
-        if (enemy.enemyRef) {
-            enemy.enemyRef.takeDamage(1);
+        // Play explosion sound
+        const explosionSound = this.sound.get('explosion');
+        if (explosionSound) {
+            explosionSound.play();
+        } else {
+            this.sound.play('crash');
         }
+        
+        // Create shockwave circle effect
+        const shockwave = this.add.circle(x, y, 10, 0xf39c12, 0.7);
+        shockwave.setDepth(20);
+        
+        // Animate the shockwave expanding outward
+        this.tweens.add({
+            targets: shockwave,
+            radius: radius,
+            alpha: 0,
+            duration: 500,
+            ease: 'Cubic.Out',
+            onComplete: () => {
+                shockwave.destroy();
+            }
+        });
+        
+        // Auto-destroy particles after animation completes
+        this.time.delayedCall(800, () => {
+            explosion.destroy();
+        });
     }
     
     handlePlayerPickupCollision(player, pickup) {
