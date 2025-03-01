@@ -45,7 +45,7 @@ class Player {
                 projectileKey: 'rocket',
                 sound: 'rocket-launch',
                 explosionRadius: 100,
-                unlocked: scene.game.gameState.currentCity !== 'Bucharest' // Unlocked after first city
+                unlocked: scene.game.gameState.rocketUnlocked || scene.game.gameState.currentCity !== 'Bucharest' // Unlocked after first city or if already unlocked
             },
             laser: {
                 name: 'Laser',
@@ -55,10 +55,11 @@ class Player {
                 projectileLifespan: 800,
                 projectileKey: 'laser',
                 sound: 'laser',
-                unlocked: scene.game.gameState.currentCity === 'Cluj-Napoca' ||
+                unlocked: scene.game.gameState.laserUnlocked ||
+                          scene.game.gameState.currentCity === 'Cluj-Napoca' ||
                           scene.game.gameState.currentCity === 'Timisoara' ||
                           scene.game.gameState.currentCity === 'Iasi' ||
-                          scene.game.gameState.currentCity === 'Vaslui' // Unlocked in later cities
+                          scene.game.gameState.currentCity === 'Vaslui' // Unlocked in later cities or if already unlocked
             }
         };
         

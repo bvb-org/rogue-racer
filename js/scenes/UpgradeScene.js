@@ -14,6 +14,12 @@ class UpgradeScene extends Phaser.Scene {
         // Check if shockwave should be unlocked
         this.unlockShockwave = data.unlockShockwave || false;
         
+        // Check if rocket should be unlocked
+        this.unlockRocket = data.unlockRocket || false;
+        
+        // Check if laser should be unlocked
+        this.unlockLaser = data.unlockLaser || false;
+        
         // Set available upgrade points if not already set
         if (this.game.gameState.availableUpgradePoints === undefined) {
             this.game.gameState.availableUpgradePoints = 2;
@@ -78,6 +84,22 @@ class UpgradeScene extends Phaser.Scene {
             // Unlock shockwave ability for all future levels
             this.time.delayedCall(1000, () => {
                 this.showShockwaveUnlockMessage();
+            });
+        }
+        
+        // Check if rocket should be unlocked
+        if (this.unlockRocket) {
+            // Unlock rocket weapon
+            this.time.delayedCall(1000, () => {
+                this.showRocketUnlockMessage();
+            });
+        }
+        
+        // Check if laser should be unlocked
+        if (this.unlockLaser) {
+            // Unlock laser weapon
+            this.time.delayedCall(1000, () => {
+                this.showLaserUnlockMessage();
             });
         }
         
@@ -440,6 +462,170 @@ class UpgradeScene extends Phaser.Scene {
             
             // Set shockwave as unlocked in game state
             this.game.gameState.shockwaveUnlocked = true;
+            GameStorage.saveGame(this.game.gameState);
+        });
+    }
+    
+    showRocketUnlockMessage() {
+        const { width, height } = this.cameras.main;
+        
+        // Create a semi-transparent background
+        const bg = this.add.rectangle(width/2, height/2, width, height, 0x000000, 0.8)
+            .setDepth(200);
+        
+        // Create unlock message container
+        const container = this.add.container(width/2, height/2).setDepth(201);
+        
+        // Create message background
+        const messageBg = this.add.rectangle(0, 0, 500, 300, 0x333333)
+            .setStrokeStyle(4, 0xe74c3c);
+        container.add(messageBg);
+        
+        // Create title
+        const title = this.add.text(0, -120, 'ARMĂ NOUĂ DEBLOCATĂ!', {
+            font: 'bold 28px Arial',
+            fill: '#e74c3c'
+        }).setOrigin(0.5);
+        container.add(title);
+        
+        // Create rocket icon (using a rectangle as placeholder)
+        const icon = this.add.rectangle(0, -50, 20, 40, 0xe74c3c, 1);
+        container.add(icon);
+        
+        // Create pulse animation for the icon
+        this.tweens.add({
+            targets: icon,
+            scale: { from: 0.8, to: 1.2 },
+            alpha: { from: 1, to: 0.7 },
+            duration: 1000,
+            yoyo: true,
+            repeat: -1
+        });
+        
+        // Create description
+        const description = this.add.text(0, 30,
+            "RACHETĂ\n\nLansează rachete explozive care provoacă daune în zonă.\n\nApasă tasta '2' pentru a selecta această armă.\n\nDaune: Mare, Viteză: Medie", {
+            font: '18px Arial',
+            fill: '#ffffff',
+            align: 'center'
+        }).setOrigin(0.5);
+        container.add(description);
+        
+        // Create continue button
+        const button = this.add.rectangle(0, 120, 200, 50, 0xe74c3c)
+            .setInteractive();
+        container.add(button);
+        
+        const buttonText = this.add.text(0, 120, 'CONTINUĂ', {
+            font: 'bold 18px Arial',
+            fill: '#ffffff'
+        }).setOrigin(0.5);
+        container.add(buttonText);
+        
+        // Add hover effect
+        button.on('pointerover', () => {
+            button.setFillStyle(0xc0392b);
+        });
+        
+        button.on('pointerout', () => {
+            button.setFillStyle(0xe74c3c);
+        });
+        
+        // Add click effect
+        button.on('pointerdown', () => {
+            button.setFillStyle(0xa93226);
+        });
+        
+        // Close dialog when continue is clicked
+        button.on('pointerup', () => {
+            // Remove dialog
+            bg.destroy();
+            container.destroy();
+            
+            // Set rocket as unlocked in game state
+            this.game.gameState.rocketUnlocked = true;
+            GameStorage.saveGame(this.game.gameState);
+        });
+    }
+    
+    showLaserUnlockMessage() {
+        const { width, height } = this.cameras.main;
+        
+        // Create a semi-transparent background
+        const bg = this.add.rectangle(width/2, height/2, width, height, 0x000000, 0.8)
+            .setDepth(200);
+        
+        // Create unlock message container
+        const container = this.add.container(width/2, height/2).setDepth(201);
+        
+        // Create message background
+        const messageBg = this.add.rectangle(0, 0, 500, 300, 0x333333)
+            .setStrokeStyle(4, 0x3498db);
+        container.add(messageBg);
+        
+        // Create title
+        const title = this.add.text(0, -120, 'ARMĂ NOUĂ DEBLOCATĂ!', {
+            font: 'bold 28px Arial',
+            fill: '#3498db'
+        }).setOrigin(0.5);
+        container.add(title);
+        
+        // Create laser icon (using a rectangle as placeholder)
+        const icon = this.add.rectangle(0, -50, 10, 60, 0x3498db, 1);
+        container.add(icon);
+        
+        // Create pulse animation for the icon
+        this.tweens.add({
+            targets: icon,
+            scale: { from: 0.8, to: 1.2 },
+            alpha: { from: 1, to: 0.7 },
+            duration: 500,
+            yoyo: true,
+            repeat: -1
+        });
+        
+        // Create description
+        const description = this.add.text(0, 30,
+            "LASER\n\nTrage cu raze laser rapide și precise.\n\nApasă tasta '3' pentru a selecta această armă.\n\nDaune: Medii, Viteză: Mare", {
+            font: '18px Arial',
+            fill: '#ffffff',
+            align: 'center'
+        }).setOrigin(0.5);
+        container.add(description);
+        
+        // Create continue button
+        const button = this.add.rectangle(0, 120, 200, 50, 0x3498db)
+            .setInteractive();
+        container.add(button);
+        
+        const buttonText = this.add.text(0, 120, 'CONTINUĂ', {
+            font: 'bold 18px Arial',
+            fill: '#ffffff'
+        }).setOrigin(0.5);
+        container.add(buttonText);
+        
+        // Add hover effect
+        button.on('pointerover', () => {
+            button.setFillStyle(0x2980b9);
+        });
+        
+        button.on('pointerout', () => {
+            button.setFillStyle(0x3498db);
+        });
+        
+        // Add click effect
+        button.on('pointerdown', () => {
+            button.setFillStyle(0x1f618d);
+        });
+        
+        // Close dialog when continue is clicked
+        button.on('pointerup', () => {
+            // Remove dialog
+            bg.destroy();
+            container.destroy();
+            
+            // Set laser as unlocked in game state
+            this.game.gameState.laserUnlocked = true;
             GameStorage.saveGame(this.game.gameState);
         });
     }

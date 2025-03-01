@@ -305,7 +305,10 @@ class MenuScene extends Phaser.Scene {
                 fireRate: 0,
                 ammo: 0,
                 health: 0
-            }
+            },
+            shockwaveUnlocked: false,
+            rocketUnlocked: false,
+            laserUnlocked: false
         };
     }
     

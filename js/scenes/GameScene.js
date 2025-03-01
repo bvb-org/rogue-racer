@@ -476,6 +476,13 @@ class GameScene extends Phaser.Scene {
         // Check if this is the first city completed (Bucharest)
         const isFirstCityCompleted = this.currentCity === 'Bucharest';
         
+        // Check if this is a city where laser should be unlocked
+        const shouldUnlockLaser =
+            this.currentCity === 'Cluj-Napoca' ||
+            this.currentCity === 'Timisoara' ||
+            this.currentCity === 'Iasi' ||
+            this.currentCity === 'Vaslui';
+        
         // Transition to upgrade scene after delay
         this.time.delayedCall(3000, () => {
             // Stop game music
@@ -483,10 +490,12 @@ class GameScene extends Phaser.Scene {
                 this.gameMusic.stop();
             }
             
-            // Start upgrade scene
+            // Start upgrade scene with appropriate unlock flags
             this.scene.start('UpgradeScene', {
                 score: this.score,
-                unlockShockwave: isFirstCityCompleted
+                unlockShockwave: isFirstCityCompleted,
+                unlockRocket: isFirstCityCompleted,
+                unlockLaser: shouldUnlockLaser && !this.game.gameState.laserUnlocked
             });
         });
     }

@@ -53,7 +53,10 @@ const gameState = {
         health: 0
     },
     availableUpgradePoints: 2, // Initial upgrade points
-    bossDefeated: false // Track if boss has been defeated
+    bossDefeated: false, // Track if boss has been defeated
+    shockwaveUnlocked: false, // Track if shockwave ability is unlocked
+    rocketUnlocked: false, // Track if rocket weapon is unlocked
+    laserUnlocked: false // Track if laser weapon is unlocked
 };
 
 // Initialize the game when the window loads
