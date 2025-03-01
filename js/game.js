@@ -1,5 +1,5 @@
 // Flag to enable direct access to boss level for testing
-const ENABLE_BOSS_TEST = true;
+const ENABLE_BOSS_TEST = false;
 
 // Game configuration
 const config = {
