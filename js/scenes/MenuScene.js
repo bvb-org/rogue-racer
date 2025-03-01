@@ -30,7 +30,16 @@ class MenuScene extends Phaser.Scene {
             align: 'center'
         }).setOrigin(0.5);
         
-        // City selection
+        // Controls button
+        this.createButton(
+            width / 2,
+            height / 4 + 170,
+            'Controale',
+            () => {
+                this.showControlsDialog();
+            }
+        );
+        
         // City selection
         this.createCitySelection(width, height);
         
@@ -223,7 +232,94 @@ class MenuScene extends Phaser.Scene {
         // Set current city
         this.game.gameState.currentCity = city;
         
-        // Start game scene
-        this.scene.start('GameScene');
+        // If this is the first city (Bucharest), show the intro scene first
+        if (city === 'Bucharest') {
+            this.scene.start('IntroScene');
+        } else {
+            // For other cities, start the game scene directly
+            this.scene.start('GameScene');
+        }
+    }
+    
+    showControlsDialog() {
+        // Create a semi-transparent background
+        const { width, height } = this.cameras.main;
+        const bg = this.add.rectangle(width/2, height/2, width, height, 0x000000, 0.7)
+            .setInteractive()
+            .setDepth(200);
+        
+        // Create controls dialog
+        const dialogWidth = 400;
+        const dialogHeight = 300;
+        const dialog = this.add.rectangle(width/2, height/2, dialogWidth, dialogHeight, 0x333333)
+            .setDepth(201);
+            
+        // Add dialog border
+        const border = this.add.rectangle(width/2, height/2, dialogWidth, dialogHeight)
+            .setStrokeStyle(2, 0xffffff)
+            .setDepth(202);
+        
+        // Add title
+        const title = this.add.text(width/2, height/2 - 120, 'CONTROALE', {
+            font: 'bold 24px Arial',
+            fill: '#ffffff'
+        }).setOrigin(0.5).setDepth(202);
+        
+        // Add controls text
+        const controlsText = this.add.text(width/2, height/2 - 50,
+            '↑  Accelerează\n↓  Frânează/Marșarier\n←  Virează Stânga\n→  Virează Dreapta\nSPACE - Trage\nC - Undă de șoc', {
+            font: '18px Arial',
+            fill: '#ffffff',
+            align: 'center'
+        }).setOrigin(0.5).setDepth(202);
+        
+        // Add OK button
+        const buttonWidth = 100;
+        const buttonHeight = 40;
+        const button = this.add.rectangle(width/2, height/2 + 80, buttonWidth, buttonHeight, 0x3498db)
+            .setInteractive()
+            .setDepth(202);
+            
+        const buttonText = this.add.text(width/2, height/2 + 80, 'OK', {
+            font: 'bold 18px Arial',
+            fill: '#ffffff'
+        }).setOrigin(0.5).setDepth(203);
+        
+        // Add hover effect
+        button.on('pointerover', () => {
+            button.setFillStyle(0x2980b9);
+        });
+        
+        button.on('pointerout', () => {
+            button.setFillStyle(0x3498db);
+        });
+        
+        // Add click effect
+        button.on('pointerdown', () => {
+            button.setFillStyle(0x1c6ea4);
+        });
+        
+        // Close dialog when OK is clicked
+        button.on('pointerup', () => {
+            // Remove dialog
+            bg.destroy();
+            dialog.destroy();
+            border.destroy();
+            title.destroy();
+            controlsText.destroy();
+            button.destroy();
+            buttonText.destroy();
+        });
+        
+        // Close dialog when clicking outside
+        bg.on('pointerdown', () => {
+            bg.destroy();
+            dialog.destroy();
+            border.destroy();
+            title.destroy();
+            controlsText.destroy();
+            button.destroy();
+            buttonText.destroy();
+        });
     }
 }

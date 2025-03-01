@@ -84,6 +84,7 @@ class BootScene extends Phaser.Scene {
         this.load.audio('pickup', 'assets/sounds/pickup.mp3');
         this.load.audio('menu-music', 'assets/sounds/menu-music.mp3');
         this.load.audio('game-music', 'assets/sounds/game-music.mp3');
+        this.load.audio('intro-music', 'assets/sounds/menu-music.mp3'); // Temporarily using menu music for intro
     }
 
     create() {
@@ -147,5 +148,6 @@ class BootScene extends Phaser.Scene {
         createEmptySound('pickup');
         createEmptySound('menu-music');
         createEmptySound('game-music');
+        createEmptySound('intro-music');
     }
 }
