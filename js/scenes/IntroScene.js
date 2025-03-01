@@ -31,11 +31,14 @@ class IntroScene extends Phaser.Scene {
             fill: '#ffffff'
         }).setOrigin(0.5);
         
-        // Backstory text
+        // Backstory text with improved visibility (added stroke and shadow)
         this.storyText = this.add.text(width / 2, 150, 'Fugi de CG și POT!\nÎncearcă să îi învingi și să ajungi la CT final.', {
             font: '24px Arial',
             fill: '#ffffff',
-            align: 'center'
+            align: 'center',
+            stroke: '#000000',
+            strokeThickness: 4,
+            shadow: { offsetX: 2, offsetY: 2, color: '#000000', blur: 5, fill: true }
         }).setOrigin(0.5);
         
         // Dialog boxes
@@ -51,13 +54,11 @@ class IntroScene extends Phaser.Scene {
             height - 80,
             'Continuă',
             () => {
-                // Stop intro music if playing
-                if (this.introMusic) {
-                    this.introMusic.stop();
-                }
+                // Disable the button to prevent multiple clicks
+                this.continueButton.setVisible(false);
                 
-                // Start the game
-                this.scene.start('GameScene');
+                // Start the shooting animation sequence
+                this.startShootingSequence();
             }
         );
         this.continueButton.setVisible(false);
@@ -247,5 +248,201 @@ class IntroScene extends Phaser.Scene {
         
         // Start the timeline
         timeline.play();
+    }
+    
+    startShootingSequence() {
+        const { width, height } = this.cameras.main;
+        
+        // Create bullets group
+        this.bullets = this.physics.add.group({
+            defaultKey: 'bullet',
+            maxSize: 10
+        });
+        
+        // Add shoot sound
+        this.shootSound = this.sound.add('shoot', {
+            loop: false,
+            volume: 0.3
+        });
+        
+        // Timeline for the shooting sequence
+        const timeline = this.tweens.createTimeline();
+        
+        // First shooting animation
+        timeline.add({
+            targets: {},
+            duration: 300,
+            onStart: () => {
+                this.shootBullet();
+            }
+        });
+        
+        // Second shooting animation
+        timeline.add({
+            targets: {},
+            duration: 300,
+            onStart: () => {
+                this.shootBullet();
+            }
+        });
+        
+        // Third shooting animation
+        timeline.add({
+            targets: {},
+            duration: 300,
+            onStart: () => {
+                this.shootBullet();
+                
+                // Create explosion effect on enemy car
+                this.time.delayedCall(200, () => {
+                    this.createExplosion(this.enemyCar.x, this.enemyCar.y);
+                    this.enemyCar.destroy();
+                });
+            }
+        });
+        
+        // Player car drives off screen
+        timeline.add({
+            targets: this.playerCar,
+            y: -150, // Move up and off screen
+            duration: 1500,
+            ease: 'Power1',
+            onComplete: () => {
+                // Show controls dialog
+                this.showControlsDialog();
+            }
+        });
+        
+        // Start the timeline
+        timeline.play();
+    }
+    
+    shootBullet() {
+        // Create bullet
+        const bullet = this.bullets.get();
+        
+        if (bullet) {
+            // Set bullet position (from player car)
+            bullet.setPosition(this.playerCar.x, this.playerCar.y - 30);
+            bullet.setActive(true);
+            bullet.setVisible(true);
+            
+            // Set bullet velocity (upward)
+            bullet.setVelocity(0, -500);
+            
+            // Play shoot sound
+            this.shootSound.play();
+            
+            // Auto-destroy bullet after 1 second
+            this.time.delayedCall(1000, () => {
+                bullet.setActive(false);
+                bullet.setVisible(false);
+            });
+        }
+    }
+    
+    createExplosion(x, y) {
+        // Create explosion particle effect
+        const explosion = this.add.particles(x, y, 'bullet', {
+            speed: { min: 50, max: 150 },
+            scale: { start: 1, end: 0 },
+            lifespan: 800,
+            blendMode: 'ADD',
+            quantity: 30
+        });
+        
+        // Auto-destroy particles after animation completes
+        this.time.delayedCall(800, () => {
+            explosion.destroy();
+        });
+    }
+    
+    showControlsDialog() {
+        const { width, height } = this.cameras.main;
+        
+        // Create a semi-transparent background
+        const bg = this.add.rectangle(width/2, height/2, width, height, 0x000000, 0.7)
+            .setInteractive()
+            .setDepth(200);
+        
+        // Create controls dialog
+        const dialogWidth = 400;
+        const dialogHeight = 350; // Made taller to accommodate the shockwave note
+        const dialog = this.add.rectangle(width/2, height/2, dialogWidth, dialogHeight, 0x333333)
+            .setDepth(201);
+            
+        // Add dialog border
+        const border = this.add.rectangle(width/2, height/2, dialogWidth, dialogHeight)
+            .setStrokeStyle(2, 0xffffff)
+            .setDepth(202);
+        
+        // Add title
+        const title = this.add.text(width/2, height/2 - 140, 'CONTROALE', {
+            font: 'bold 24px Arial',
+            fill: '#ffffff'
+        }).setOrigin(0.5).setDepth(202);
+        
+        // Add controls text
+        const controlsText = this.add.text(width/2, height/2 - 70,
+            '↑  Accelerează\n↓  Frânează/Marșarier\n←  Virează Stânga\n→  Virează Dreapta\nSPACE - Trage', {
+            font: '18px Arial',
+            fill: '#ffffff',
+            align: 'center'
+        }).setOrigin(0.5).setDepth(202);
+        
+        // Add shockwave text with note that it's locked
+        const shockwaveText = this.add.text(width/2, height/2 + 30,
+            'C - Undă de șoc\n(Deblocat după primul nivel)', {
+            font: '18px Arial',
+            fill: '#888888', // Gray color to indicate it's locked
+            align: 'center'
+        }).setOrigin(0.5).setDepth(202);
+        
+        // Add OK button
+        const buttonWidth = 100;
+        const buttonHeight = 40;
+        const button = this.add.rectangle(width/2, height/2 + 100, buttonWidth, buttonHeight, 0x3498db)
+            .setInteractive()
+            .setDepth(202);
+            
+        const buttonText = this.add.text(width/2, height/2 + 100, 'OK', {
+            font: 'bold 18px Arial',
+            fill: '#ffffff'
+        }).setOrigin(0.5).setDepth(203);
+        
+        // Add hover effect
+        button.on('pointerover', () => {
+            button.setFillStyle(0x2980b9);
+        });
+        
+        button.on('pointerout', () => {
+            button.setFillStyle(0x3498db);
+        });
+        
+        // Add click effect
+        button.on('pointerdown', () => {
+            button.setFillStyle(0x1c6ea4);
+        });
+        
+        // Close dialog and start game when OK is clicked
+        button.on('pointerup', () => {
+            // Remove dialog
+            bg.destroy();
+            dialog.destroy();
+            border.destroy();
+            title.destroy();
+            controlsText.destroy();
+            shockwaveText.destroy();
+            button.destroy();
+            buttonText.destroy();
+            
+            // Stop intro music if playing
+            if (this.introMusic) {
+                this.introMusic.stop();
+            }
+            
+            // Start the game
+            this.scene.start('GameScene');
+        });
     }
 }
