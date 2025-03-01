@@ -40,6 +40,19 @@ class MenuScene extends Phaser.Scene {
             }
         );
         
+        // Add boss test button if enabled
+        if (ENABLE_BOSS_TEST) {
+            this.createButton(
+                width / 2,
+                height / 4 + 230,
+                'BOSS TEST',
+                () => {
+                    this.startBossLevel();
+                },
+                0xe74c3c // Red color for boss button
+            );
+        }
+        
         // City selection
         this.createCitySelection(width, height);
         
@@ -239,6 +252,22 @@ class MenuScene extends Phaser.Scene {
             // For other cities, start the game scene directly
             this.scene.start('GameScene');
         }
+    }
+    
+    startBossLevel() {
+        // Stop menu music
+        this.sound.stopByKey('menu-music');
+        
+        // Set player stats to be stronger for testing
+        this.game.gameState.playerStats = {
+            speed: 1.5,
+            fireRate: 1.5,
+            ammo: 100,
+            health: 100
+        };
+        
+        // Start the boss scene
+        this.scene.start('BossScene');
     }
     
     showControlsDialog() {

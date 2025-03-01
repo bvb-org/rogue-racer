@@ -1,3 +1,6 @@
+// Flag to enable direct access to boss level for testing
+const ENABLE_BOSS_TEST = true;
+
 // Game configuration
 const config = {
     type: Phaser.AUTO,
@@ -20,7 +23,8 @@ const config = {
         MenuScene,
         IntroScene,
         GameScene,
-        UpgradeScene
+        UpgradeScene,
+        BossScene
     ]
 };
 
@@ -48,7 +52,8 @@ const gameState = {
         ammo: 0,
         health: 0
     },
-    availableUpgradePoints: 2 // Initial upgrade points
+    availableUpgradePoints: 2, // Initial upgrade points
+    bossDefeated: false // Track if boss has been defeated
 };
 
 // Initialize the game when the window loads
