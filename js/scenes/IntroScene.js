@@ -253,11 +253,7 @@ class IntroScene extends Phaser.Scene {
     startShootingSequence() {
         const { width, height } = this.cameras.main;
         
-        // Create a debug text to show what's happening
-        const debugText = this.add.text(width/2, height - 50, 'Starting shooting sequence...', {
-            font: '16px Arial',
-            fill: '#ffffff'
-        }).setOrigin(0.5).setDepth(100);
+        // No debug text needed
         
         // Create bullets group
         this.bullets = this.physics.add.group({
@@ -277,25 +273,20 @@ class IntroScene extends Phaser.Scene {
         testBullet.setTint(0xff0000); // Make it red for visibility
         
         // Delay the shooting sequence to ensure everything is loaded
-        this.time.delayedCall(1000, () => {
-            debugText.setText('Shooting first bullet...');
-            
+        this.time.delayedCall(500, () => {
             // First bullet
             this.shootBullet();
             
             // Second bullet after delay
-            this.time.delayedCall(800, () => {
-                debugText.setText('Shooting second bullet...');
+            this.time.delayedCall(400, () => {
                 this.shootBullet();
                 
                 // Third bullet after another delay
-                this.time.delayedCall(800, () => {
-                    debugText.setText('Shooting third bullet...');
+                this.time.delayedCall(400, () => {
                     this.shootBullet();
                     
                     // Create explosion after the third bullet
-                    this.time.delayedCall(500, () => {
-                        debugText.setText('Creating explosion...');
+                    this.time.delayedCall(300, () => {
                         
                         // Create a larger explosion
                         this.createExplosion(this.enemyCar.x, this.enemyCar.y);
@@ -307,8 +298,7 @@ class IntroScene extends Phaser.Scene {
                         this.enemyCar.destroy();
                         
                         // Wait longer after the explosion before showing controls
-                        this.time.delayedCall(2000, () => {
-                            debugText.destroy();
+                        this.time.delayedCall(2500, () => {
                             testBullet.destroy();
                             this.showControlsDialog();
                         });
@@ -328,7 +318,7 @@ class IntroScene extends Phaser.Scene {
         this.tweens.add({
             targets: bullet,
             y: this.enemyCar.y,
-            duration: 600,
+            duration: 300, // Twice as fast
             ease: 'Linear'
         });
         
@@ -339,7 +329,7 @@ class IntroScene extends Phaser.Scene {
         this.tweens.add({
             targets: glow,
             y: this.enemyCar.y,
-            duration: 600,
+            duration: 300, // Twice as fast
             ease: 'Linear'
         });
         
@@ -354,7 +344,7 @@ class IntroScene extends Phaser.Scene {
             this.tweens.add({
                 targets: trailPart,
                 y: this.enemyCar.y + (i * 10),
-                duration: 600,
+                duration: 300, // Twice as fast
                 ease: 'Linear',
                 delay: i * 50,
                 onComplete: () => {
@@ -367,7 +357,7 @@ class IntroScene extends Phaser.Scene {
         this.shootSound.play();
         
         // Auto-destroy bullet and glow after animation completes
-        this.time.delayedCall(700, () => {
+        this.time.delayedCall(350, () => { // Adjusted to match faster bullet speed
             bullet.destroy();
             glow.destroy();
         });
