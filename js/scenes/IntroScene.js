@@ -253,6 +253,12 @@ class IntroScene extends Phaser.Scene {
     startShootingSequence() {
         const { width, height } = this.cameras.main;
         
+        // Create a debug text to show what's happening
+        const debugText = this.add.text(width/2, height - 50, 'Starting shooting sequence...', {
+            font: '16px Arial',
+            fill: '#ffffff'
+        }).setOrigin(0.5).setDepth(100);
+        
         // Create bullets group
         this.bullets = this.physics.add.group({
             defaultKey: 'bullet',
@@ -262,160 +268,195 @@ class IntroScene extends Phaser.Scene {
         // Add shoot sound
         this.shootSound = this.sound.add('shoot', {
             loop: false,
-            volume: 0.4 // Slightly louder
+            volume: 0.6 // Make it louder
         });
         
-        // Timeline for the shooting sequence
-        const timeline = this.tweens.createTimeline();
+        // Create a simple bullet to test if it's visible
+        const testBullet = this.add.image(width/2, height/2, 'bullet');
+        testBullet.setScale(5); // Make it very large for testing
+        testBullet.setTint(0xff0000); // Make it red for visibility
         
-        // Pause before shooting to make it more dramatic
-        timeline.add({
-            targets: {},
-            duration: 500
-        });
-        
-        // First shooting animation
-        timeline.add({
-            targets: {},
-            duration: 400,
-            onStart: () => {
-                this.shootBullet();
-            }
-        });
-        
-        // Second shooting animation
-        timeline.add({
-            targets: {},
-            duration: 400,
-            onStart: () => {
-                this.shootBullet();
-            }
-        });
-        
-        // Third shooting animation
-        timeline.add({
-            targets: {},
-            duration: 400,
-            onStart: () => {
+        // Delay the shooting sequence to ensure everything is loaded
+        this.time.delayedCall(1000, () => {
+            debugText.setText('Shooting first bullet...');
+            
+            // First bullet
+            this.shootBullet();
+            
+            // Second bullet after delay
+            this.time.delayedCall(800, () => {
+                debugText.setText('Shooting second bullet...');
                 this.shootBullet();
                 
-                // Create explosion effect on enemy car
-                this.time.delayedCall(200, () => {
-                    // Create a larger explosion
-                    this.createExplosion(this.enemyCar.x, this.enemyCar.y);
-                    // Flash the screen for dramatic effect
-                    this.cameras.main.flash(300, 255, 255, 255);
-                    // Destroy the enemy car
-                    this.enemyCar.destroy();
+                // Third bullet after another delay
+                this.time.delayedCall(800, () => {
+                    debugText.setText('Shooting third bullet...');
+                    this.shootBullet();
+                    
+                    // Create explosion after the third bullet
+                    this.time.delayedCall(500, () => {
+                        debugText.setText('Creating explosion...');
+                        
+                        // Create a larger explosion
+                        this.createExplosion(this.enemyCar.x, this.enemyCar.y);
+                        
+                        // Flash the screen for dramatic effect
+                        this.cameras.main.flash(500, 255, 255, 255);
+                        
+                        // Destroy the enemy car
+                        this.enemyCar.destroy();
+                        
+                        // Wait longer after the explosion before showing controls
+                        this.time.delayedCall(2000, () => {
+                            debugText.destroy();
+                            testBullet.destroy();
+                            this.showControlsDialog();
+                        });
+                    });
                 });
-            }
+            });
         });
-        
-        // Wait a moment after the explosion
-        timeline.add({
-            targets: {},
-            duration: 800
-        });
-        
-        // Player car drives off screen
-        timeline.add({
-            targets: this.playerCar,
-            y: -150, // Move up and off screen
-            duration: 1500,
-            ease: 'Power1',
-            onComplete: () => {
-                // Show controls dialog
-                this.showControlsDialog();
-            }
-        });
-        
-        // Start the timeline
-        timeline.play();
     }
     
     shootBullet() {
-        // Create bullet
-        const bullet = this.bullets.get();
+        // Instead of using the physics group, create a direct sprite for better visibility
+        const bullet = this.add.sprite(this.playerCar.x, this.playerCar.y - 30, 'bullet');
+        bullet.setScale(4); // Make bullet very large and visible
+        bullet.setTint(0xff00ff); // Bright magenta color for high visibility
         
-        if (bullet) {
-            // Set bullet position (from player car)
-            bullet.setPosition(this.playerCar.x, this.playerCar.y - 30);
-            bullet.setActive(true);
-            bullet.setVisible(true);
-            bullet.setScale(1.5); // Make bullet larger and more visible
+        // Create a simple animation to move the bullet upward
+        this.tweens.add({
+            targets: bullet,
+            y: this.enemyCar.y,
+            duration: 600,
+            ease: 'Linear'
+        });
+        
+        // Add a glow effect around the bullet
+        const glow = this.add.circle(bullet.x, bullet.y, 15, 0xff00ff, 0.5);
+        
+        // Make the glow follow the bullet
+        this.tweens.add({
+            targets: glow,
+            y: this.enemyCar.y,
+            duration: 600,
+            ease: 'Linear'
+        });
+        
+        // Add a trail effect with direct sprites instead of particles
+        for (let i = 0; i < 5; i++) {
+            const trailPart = this.add.sprite(bullet.x, bullet.y + (i * 10), 'bullet');
+            trailPart.setScale(2 - (i * 0.3));
+            trailPart.setAlpha(0.7 - (i * 0.1));
+            trailPart.setTint(0xff00ff);
             
-            // Set bullet velocity (upward)
-            bullet.setVelocity(0, -600); // Faster bullet
-            
-            // Add a glow effect to the bullet
-            bullet.setTint(0x00ffff);
-            
-            // Add a trail effect
-            const trail = this.add.particles(bullet.x, bullet.y, 'bullet', {
-                speed: 10,
-                scale: { start: 0.6, end: 0 },
-                lifespan: 300,
-                blendMode: 'ADD',
-                tint: 0x00ffff,
-                follow: bullet
-            });
-            
-            // Play shoot sound
-            this.shootSound.play();
-            
-            // Auto-destroy bullet and trail after 1 second
-            this.time.delayedCall(1000, () => {
-                bullet.setActive(false);
-                bullet.setVisible(false);
-                trail.destroy();
+            // Make trail part follow with delay
+            this.tweens.add({
+                targets: trailPart,
+                y: this.enemyCar.y + (i * 10),
+                duration: 600,
+                ease: 'Linear',
+                delay: i * 50,
+                onComplete: () => {
+                    trailPart.destroy();
+                }
             });
         }
+        
+        // Play shoot sound
+        this.shootSound.play();
+        
+        // Auto-destroy bullet and glow after animation completes
+        this.time.delayedCall(700, () => {
+            bullet.destroy();
+            glow.destroy();
+        });
     }
     
     createExplosion(x, y) {
-        // Create a more dramatic explosion particle effect
-        const explosion = this.add.particles(x, y, 'bullet', {
-            speed: { min: 80, max: 200 },
-            scale: { start: 2, end: 0 },
-            lifespan: 1000,
-            blendMode: 'ADD',
-            quantity: 50,
-            tint: [ 0xff0000, 0xff7700, 0xffff00 ] // Red, orange, yellow colors
+        // Create a simpler but more visible explosion using sprites instead of particles
+        
+        // Create a large central flash
+        const flash = this.add.circle(x, y, 40, 0xffffff, 1);
+        this.tweens.add({
+            targets: flash,
+            alpha: 0,
+            scale: 2,
+            duration: 300,
+            ease: 'Power2',
+            onComplete: () => {
+                flash.destroy();
+            }
         });
         
-        // Add a secondary explosion effect with different parameters
-        const secondaryExplosion = this.add.particles(x, y, 'bullet', {
-            speed: { min: 50, max: 150 },
-            scale: { start: 1.5, end: 0 },
-            lifespan: 800,
-            blendMode: 'ADD',
-            quantity: 30,
-            tint: 0xffffff
-        });
+        // Create explosion pieces using sprites
+        const colors = [0xff0000, 0xff7700, 0xffff00, 0xff00ff];
         
-        // Add a shockwave effect
-        const shockwave = this.add.circle(x, y, 10, 0xffffff, 0.7);
+        // Create 20 explosion pieces
+        for (let i = 0; i < 20; i++) {
+            // Random angle and distance
+            const angle = Math.random() * Math.PI * 2;
+            const distance = 50 + Math.random() * 100;
+            
+            // Calculate end position
+            const endX = x + Math.cos(angle) * distance;
+            const endY = y + Math.sin(angle) * distance;
+            
+            // Create piece
+            const piece = this.add.sprite(x, y, 'bullet');
+            piece.setScale(3 + Math.random() * 2);
+            piece.setTint(colors[Math.floor(Math.random() * colors.length)]);
+            
+            // Animate piece
+            this.tweens.add({
+                targets: piece,
+                x: endX,
+                y: endY,
+                alpha: 0,
+                scale: 0,
+                duration: 800 + Math.random() * 400,
+                ease: 'Power2',
+                onComplete: () => {
+                    piece.destroy();
+                }
+            });
+        }
+        
+        // Create a shockwave ring
+        const shockwave = this.add.circle(x, y, 10, 0xffffff, 0.8);
+        shockwave.setStrokeStyle(4, 0xffff00);
+        
         this.tweens.add({
             targets: shockwave,
-            radius: 100,
+            radius: 150,
             alpha: 0,
-            duration: 500,
+            duration: 800,
             ease: 'Cubic.Out',
             onComplete: () => {
                 shockwave.destroy();
             }
         });
         
+        // Create a second, delayed shockwave
+        const secondShockwave = this.add.circle(x, y, 5, 0xff0000, 0.6);
+        secondShockwave.setStrokeStyle(3, 0xff7700);
+        
+        this.tweens.add({
+            targets: secondShockwave,
+            radius: 100,
+            alpha: 0,
+            delay: 200,
+            duration: 600,
+            ease: 'Cubic.Out',
+            onComplete: () => {
+                secondShockwave.destroy();
+            }
+        });
+        
         // Play crash sound if available
         if (this.sound.get('crash')) {
-            this.sound.play('crash', { volume: 0.5 });
+            this.sound.play('crash', { volume: 0.8 });
         }
-        
-        // Auto-destroy particles after animation completes
-        this.time.delayedCall(1000, () => {
-            explosion.destroy();
-            secondaryExplosion.destroy();
-        });
     }
     
     showControlsDialog() {
